@@ -1,0 +1,4 @@
+/lean-4/build/
+/lean-4/lake-manifest.json
+/lean-4/lake-packages/
+*.olean
