@@ -27,11 +27,10 @@ InstallMethod(CallFuncList,
 "for a certified function",
 [IsCertifiedFunction, IsList],
 function(cf, args)
-  local key, val;
+  local key, val, cert;
   val := CallFuncList(cf!.func, args);
-  Print("got result ", val, "\ncertifying...\n");
-  CallFuncList(cf!.certifunc, Concatenation([val],args));
-  return val;
+  cert := CallFuncList(cf!.certifunc, Concatenation([val], args));
+  return [val, cert];
 end);
 
 

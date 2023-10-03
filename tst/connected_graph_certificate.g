@@ -1,3 +1,6 @@
+LoadPackage("digraphs");
+LoadPackage("certification");
+
 Graph2Lean:=function(g)
 local edges_from_zero, x, i;
 edges_from_zero := List( DigraphEdges(g), x -> List(x, i -> i-1) );
@@ -34,11 +37,15 @@ end;
 connected_graph_certificate := function( is_connected, g )
 local cr;
 if is_connected then
-  Print("connected!\n");
   cr := rec( graph := Graph2Lean(g),
              connectivityCertificate := ConnectivityCertificate2Lean(g) );
-  Print(cr,"\n");  
 else
-  Print("not connected!\n");
+  cr := rec( graph := Graph2Lean(g),
+             nonconnectivityCertificate := "TO BE IMPLEMENTED" );
 fi;
+return cr;
 end;
+
+IsConnectedDigraph_Certified := CertifiedFunction( 
+  IsConnectedDigraph,
+  rec( certifunc := connected_graph_certificate) );
