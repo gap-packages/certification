@@ -8,5 +8,6 @@ Dependencies := rec(
   SuggestedOtherPackages := [],
   ExternalConditions := []
 ),
+TestFile := "tst/testall.g",
 AvailabilityTest := ReturnTrue
 ));
