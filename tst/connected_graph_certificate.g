@@ -1,6 +1,6 @@
 Graph2Lean:=function(g)
 return rec( vertexSize := DigraphNrVertices(g),
-         adjacencyList := AsGraph(g).adjacencies );
+                 edges := Set(List(DigraphEdges(g),SortedList)));
 end;
 
 ConnectivityCertificate2Lean:=function(g)
