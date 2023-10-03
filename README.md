@@ -1,4 +1,4 @@
-[![Build Status](https://github.com/gap-packages/certification/workflows/CI/badge.svg?branch=main)](https://github.com/gap-packages/certification/actions?query=workflow%3ACI+branch%3Amain)
+[![CI](https://github.com/gap-packages/certification/actions/workflows/CI.yml/badge.svg)](https://github.com/gap-packages/certification/actions/workflows/CI.yml)
 [![Code Coverage](https://codecov.io/github/gap-packages/certification/coverage.svg?branch=main&token=)](https://codecov.io/gh/gap-packages/certification)
 [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/gap-packages/certification/HEAD)
 
