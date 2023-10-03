@@ -4,7 +4,22 @@ return rec( vertexSize := DigraphNrVertices(g),
 end;
 
 ConnectivityCertificate2Lean:=function(g)
-return rec( );
+local root, reverse_spanning_tree, next, i, distToRoot;
+root := 1;
+reverse_spanning_tree := DigraphReverse( DigraphShortestPathSpanningTree(g, root));
+next := ShallowCopy(OutNeighbours(reverse_spanning_tree));
+for i in [1..DigraphNrVertices(g)] do
+  if next[i] = [ ] then
+    # we have root
+    next[i] := [i,i];
+  else
+    next[i] := Concatenation([i], next[i]);
+  fi;
+od;
+distToRoot := [];
+return rec( root := root,
+            next := next,
+      distToRoot := distToRoot);
 end;
 
 connected_graph_certificate := function( is_connected, g )

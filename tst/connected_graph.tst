@@ -15,7 +15,10 @@ certifying...
 connected!
 rec(
   connectivityCertificate := rec(
-       ),
+      distToRoot := [  ],
+      next := [ [ 1, 1 ], [ 2, 1 ], [ 3, 2 ], [ 4, 3 ], [ 5, 6 ], [ 6, 7 ], 
+          [ 7, 1 ] ],
+      root := 1 ),
   graph := rec(
       adjacencyList := [ [ 2, 7 ], [ 1, 3 ], [ 2, 4 ], [ 3, 5 ], [ 4, 6 ], 
           [ 5, 7 ], [ 1, 6 ] ],
