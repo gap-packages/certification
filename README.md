@@ -49,7 +49,7 @@ to the root.
 {
     "graph": {
         "vertexSize": 7,
-        "adjancencyList" : [[0,1], [1,2], [2,3], [3,4], [4,5], [5,6], [6,0]]
+        "adjancencyList" : [[6,1], [0,2], [1,3], [2,4], [3,5], [4,6], [5,0]]
     },
     "connectivityCertificate": {
         "root": 6,
