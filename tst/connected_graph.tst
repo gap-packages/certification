@@ -9,9 +9,19 @@ gap> IsConnectedDigraph_Certified :=
 <certified <Property "IsConnectedDigraph">>
 gap> D := Digraph([[2], [3], []]);;
 gap> IsConnectedDigraph_Certified(D);
+got result true
+certifying...
+connected!
+rec(
+  graph := rec(
+      vertexSize := 3 ) )
+{"graph" : {"vertexSize" : 3}}
 true
 gap> D := Digraph([[1, 3], [4], [3], []]);;
 gap> IsConnectedDigraph_Certified(D);
+got result false
+certifying...
+not connected!
 false
 gap> STOP_TEST("connected_graph.tst");
 
