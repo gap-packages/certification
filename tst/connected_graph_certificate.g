@@ -1,6 +1,8 @@
 Graph2Lean:=function(g)
+local edges_from_zero, x, i;
+edges_from_zero := List( DigraphEdges(g), x -> List(x, i -> i-1) );
 return rec( vertexSize := DigraphNrVertices(g),
-                 edges := Set(List(DigraphEdges(g),SortedList)));
+                 edges := Set(List(edges_from_zero,SortedList)));
 end;
 
 ConnectivityCertificate2Lean:=function(g)
@@ -11,20 +13,20 @@ next := ShallowCopy(OutNeighbours(reverse_spanning_tree));
 for i in [1..DigraphNrVertices(g)] do
   if next[i] = [ ] then
     # we have root
-    next[i] := [i,i];
+    next[i] := [i-1,i-1];
   else
-    next[i] := Concatenation([i], next[i]);
+    next[i] := Concatenation([i-1], next[i]-1);
   fi;
 od;
 distToRoot := [ ];
 for i in [1..DigraphNrVertices(g)] do
   if i = root then
-    Add(distToRoot, [i,0]);
+    Add(distToRoot, [i-1,0]);
   else
-    Add(distToRoot, [i, Length(DigraphShortestPath(reverse_spanning_tree,i,root)[1])-1] );
+    Add(distToRoot, [i-1, Length(DigraphShortestPath(reverse_spanning_tree,i,root)[1])-1] );
   fi;
 od;
-return rec( root := root,
+return rec( root := root-1,
             next := next,
       distToRoot := distToRoot);
 end;

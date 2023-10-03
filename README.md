@@ -21,7 +21,7 @@ The format is as follows:
 {
     "graph": {
         "vertexSize": ⟨number-of-vertices⟩,
-        "adjancencyList" : ⟨adjancency-list⟩
+        "edges" : ⟨edges-list⟩
     },
     "certificate1" : ⋯,
     "certificate2" : ⋯,
