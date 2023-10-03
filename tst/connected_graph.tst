@@ -7,15 +7,16 @@ gap> IsConnectedDigraph_Certified :=
 > CertifiedFunction( IsConnectedDigraph,
 >                    rec( certifunc := connected_graph_certificate) );
 <certified <Property "IsConnectedDigraph">>
-gap> D := Digraph([[2], [3], []]);;
+gap> D := Digraph([ [1,2], [2,3], [3,4], [4,5], [5,6], [6,7], [7,1]]);;
 gap> IsConnectedDigraph_Certified(D);
 got result true
 certifying...
 connected!
 rec(
   graph := rec(
-      vertexSize := 3 ) )
-{"graph" : {"vertexSize" : 3}}
+      adjacencyList := [ [ 1, 2 ], [ 2, 3 ], [ 3, 4 ], [ 4, 5 ], [ 5, 6 ], 
+          [ 6, 7 ], [ 1, 7 ] ],
+      vertexSize := 7 ) )
 true
 gap> D := Digraph([[1, 3], [4], [3], []]);;
 gap> IsConnectedDigraph_Certified(D);

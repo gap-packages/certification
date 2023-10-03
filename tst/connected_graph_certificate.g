@@ -4,9 +4,9 @@ if is_connected then
   Print("connected!\n");
   cr := rec( 
     graph := rec( 
-      vertexSize := DigraphNrVertices(g)));
+      vertexSize := DigraphNrVertices(g),
+      adjacencyList := AsGraph(g).adjacencies ));
   Print(cr,"\n");  
-  Print(GapToJsonString(cr),"\n");  
 else
   Print("not connected!\n");
 fi;
