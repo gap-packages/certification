@@ -8,7 +8,8 @@ import Mathlib.Order.Monotone.Basic
 import Init.Core
 import Init.Prelude
 
--- An order extended with a bottom and a top element
+-- An order extended with a bottom and a top element at the same time
+namespace GAP2Lean
 
 inductive Bounded (α : Type) : Type
   | bottom : Bounded α
@@ -184,3 +185,5 @@ def Bounded.liftFunction {α β : Type} : (α → β) → (Bounded α → Bounde
     | top => top
 
 macro "↑↑" f:term : term => `(Bounded.liftFunction $f)
+
+end GAP2Lean

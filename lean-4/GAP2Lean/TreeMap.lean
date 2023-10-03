@@ -1,7 +1,7 @@
-import BoundedOrder
-import OrdEq
+import GAP2Lean.BoundedOrder
+import GAP2Lean.OrdEq
 
-namespace HoG
+namespace GAP2Lean
 
 inductive Map (α β : Type) : Type
 | empty : Map α β
@@ -73,4 +73,4 @@ def Map.hasKey {α β : Type} [Ord α] (x : α) : Map α β → Bool
     | .eq => true
     | .gt => hasKey y right
 
-end HoG
+end GAP2Lean

@@ -1,9 +1,9 @@
-import OrdEq
-import TreeSet
-import TreeMap
-import Edge
+import GAP2Lean.OrdEq
+import GAP2Lean.TreeSet
+import GAP2Lean.TreeMap
+import GAP2Lean.Edge
 
-namespace HoG
+namespace GAP2Lean
 
 structure Graph : Type :=
   vertexSize : Nat
@@ -27,7 +27,7 @@ def Graph.fst {G : Graph} (e : G.edgeType) : G.vertex := e.fst
 
 @[simp]
 def Graph.snd {G : Graph} (e : G.edgeType) : G.vertex :=
-  ⟨e.snd, lt_trans e.snd.isLt e.fst.isLt⟩
+  ⟨e.snd, e.snd.prop⟩
 
 -- the number of eges in a graph
 def Graph.edgeSize (G : Graph) := Fintype.card G.edge
@@ -36,9 +36,9 @@ def Graph.edgeSize (G : Graph) := Fintype.card G.edge
 def Graph.badjacent {G : Graph} : G.vertex → G.vertex → Bool :=
   fun u v =>
     ltByCases u v
-      (fun u_lt_v => G.edgeTree.mem (Edge.mk v (Fin.mk u u_lt_v)))
+      (fun u_lt_v => G.edgeTree.mem (Edge.mk u v u_lt_v))
       (fun _ => false)
-      (fun v_lt_u => G.edgeTree.mem (Edge.mk u (Fin.mk v v_lt_u)))
+      (fun v_lt_u => G.edgeTree.mem (Edge.mk v u v_lt_u))
 
 def Graph.adjacent {G : Graph} : G.vertex → G.vertex → Prop :=
   fun u v => G.badjacent u v
@@ -54,36 +54,36 @@ def Graph.adjacentEdge {G : Graph} {u v : G.vertex} :
   apply ltByCases u v
   · intros u_lt_v uv
     constructor
-    case val => exact Edge.mk v ⟨u, u_lt_v⟩
+    case val => exact Edge.mk u v u_lt_v
     case property => simp_all [u_lt_v, ltByCases, adjacent, badjacent]
   · intro u_eq_v
     intro H
     simp [u_eq_v, ltByCases, adjacent, badjacent] at H
   · intros v_lt_u uv
     constructor
-    case val => exact Edge.mk u ⟨v, v_lt_u⟩
+    case val => exact Edge.mk v u v_lt_u
     case property => simp_all [v_lt_u, not_lt_of_lt, ltByCases, adjacent, badjacent]
 
-lemma Graph.adjacentEdge_lt_fst {G : Graph} {u v : G.vertex} (uv : G.adjacent u v):
-  u < v -> G.fst (G.adjacentEdge uv).val = v := by
-  intro u_lt_v
-  simp [u_lt_v, ltByCases, adjacentEdge]
+-- lemma Graph.adjacentEdge_lt_fst {G : Graph} {u v : G.vertex} (uv : G.adjacent u v):
+--   u < v -> G.fst (G.adjacentEdge uv).val = u := by
+--   intro u_lt_v
+--   simp [u_lt_v, ltByCases, adjacentEdge]
 
-lemma Graph.adjacentEdge_gt_fst {G : Graph} {u v : G.vertex} (uv : G.adjacent u v):
-  v < u -> G.fst (G.adjacentEdge uv).val = u := by
-  intro v_lt_u
-  simp [v_lt_u, not_lt_of_lt, ltByCases, adjacentEdge]
+-- lemma Graph.adjacentEdge_gt_fst {G : Graph} {u v : G.vertex} (uv : G.adjacent u v):
+--   v < u -> G.fst (G.adjacentEdge uv).val = v := by
+--   intro v_lt_u
+--   simp [v_lt_u, not_lt_of_lt, ltByCases, adjacentEdge]
 
-lemma Graph.adjacentEdge_lt_snd {G : Graph} {u v : G.vertex} (uv : G.adjacent u v):
-  u < v -> G.snd (G.adjacentEdge uv).val = u := by
-  intro u_lt_v
-  apply Fin.eq_of_val_eq
-  simp [Fin.eq_of_val_eq, adjacentEdge, ltByCases, u_lt_v, not_lt_of_lt]
-  sorry
+-- lemma Graph.adjacentEdge_lt_snd {G : Graph} {u v : G.vertex} (uv : G.adjacent u v):
+--   u < v -> G.snd (G.adjacentEdge uv).val = u := by
+--   intro u_lt_v
+--   apply Fin.eq_of_val_eq
+--   simp [Fin.eq_of_val_eq, adjacentEdge, ltByCases, u_lt_v, not_lt_of_lt]
+--   sorry
 
-lemma Graph.adjacentEdge_gt_snd {G : Graph} {u v : G.vertex} (uv : G.adjacent u v):
-  v < u -> G.snd (G.adjacentEdge uv).val = v := by
-  sorry
+-- lemma Graph.adjacentEdge_gt_snd {G : Graph} {u v : G.vertex} (uv : G.adjacent u v):
+--   v < u -> G.snd (G.adjacentEdge uv).val = v := by
+--   sorry
 
 lemma Graph.irreflexiveNeighbor (G : Graph) :
   ∀ (v : G.vertex), ¬ adjacent v v := by simp [ltByCases, adjacent, badjacent]
@@ -109,4 +109,4 @@ def Graph.minDegree (G : Graph) : WithTop Nat :=
 def Graph.maxDegree (G : Graph) : WithBot Nat :=
   Finset.sup (Fin.fintype G.vertexSize).elems (fun v => G.degree v)
 
-end HoG
+end GAP2Lean

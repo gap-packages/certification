@@ -1,19 +1,22 @@
 import Mathlib.Init.Order.Defs
 import Mathlib.Tactic.Basic
 
-import BoundedOrder
-import OrdEq
+import GAP2Lean.BoundedOrder
+import GAP2Lean.OrdEq
 
-namespace HoG
+namespace GAP2Lean
 
 -- A finite set represented as a search tree
 -- (There is already Mathlib.Data.Tree that defines Tree, so we use STree for "set tree")
-inductive STree .{u} (α : Type u) : Type u
+inductive STree.{u} (α : Type u) : Type u
   | empty : STree α
   | leaf : α → STree α
   | node : α → STree α → STree α → STree α
+deriving Repr
 
 open STree
+
+instance {α : Type} : Inhabited (STree α) := ⟨empty⟩
 
 @[simp]
 def STree.correctBound {α : Type} [Ord α] (low high : Bounded α) : STree α → Bool
@@ -32,6 +35,18 @@ def STree.correctBound {α : Type} [Ord α] (low high : Bounded α) : STree α �
       | .lt => correctBound low (.element x) left && correctBound (.element x) high right
       | _ => false
     | _ => false
+
+-- Convert a sub-array into a tree
+partial def STree.from_array {α : Type} (a : Array α) (low high : ℕ) : STree α :=
+  if low >= high then
+    empty
+  else if low + 1 = high then
+    (if _ : low < a.size then leaf a[low] else empty)
+  else
+    let middle := (low + high) / 2
+    let left := from_array a low middle
+    let right := from_array a (middle + 1) high
+    (if _ : middle < a.size then node a[middle] left right else empty)
 
 -- The tree is a search tree
 @[simp]
@@ -140,4 +155,4 @@ def STree.set {α : Type} [Ord α] (t : STree α) := { x : α // t.mem x }
 def STree.size_is_card {α : Type} [Ord α] [Fintype α] (t : STree α) :
   Fintype.card t.set = t.size := sorry
 
-end HoG
+end GAP2Lean

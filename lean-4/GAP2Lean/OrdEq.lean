@@ -1,6 +1,6 @@
 import Mathlib.Init.Order.Defs
 
-namespace HoG
+namespace GAP2Lean
 
 -- For the purposes of binary search trees we don't need a linear order.
 -- It suffices to have a class [Ord] which correctly classifies equality,
@@ -18,4 +18,4 @@ lemma OrdEq_cases {α : Type} [Ord α] [OrdEq α] (x y : α):
   revert e
   cases (compare x y) <;> simp
 
-end HoG
+end GAP2Lean

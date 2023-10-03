@@ -1,7 +1,7 @@
 import Mathlib.Algebra.Parity
 
-import Graph
-import Walk
+import GAP2Lean.Graph
+import GAP2Lean.Walk
 
 namespace Bipartite
 
