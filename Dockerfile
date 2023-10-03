@@ -12,11 +12,8 @@ ENV GAP_VERSION 4.11.1
 USER gap
 
 # install this package
-WORKDIR /home/gap/inst/gap-${GAP_VERSION}/pkg
+RUN mkdir /home/gap/inst/gap-${GAP_VERSION}/pkg/certification
 
-RUN wget https://github.com/gap-packages/certification/archive/refs/heads/main.zip \
-    && unzip main.zip \
-    && rm main.zip \
-    && mv certification-main certification
+COPY . /home/gap/inst/gap-${GAP_VERSION}/pkg/certification/
 
 WORKDIR /home/gap/inst/gap-${GAP_VERSION}/pkg/certification
