@@ -1,3 +1,7 @@
+[![CI](https://github.com/gap-packages/certification/actions/workflows/CI.yml/badge.svg)](https://github.com/gap-packages/certification/actions/workflows/CI.yml)
+[![Code Coverage](https://codecov.io/github/gap-packages/certification/coverage.svg?branch=main&token=)](https://codecov.io/gh/gap-packages/certification)
+[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/gap-packages/certification/HEAD)
+
 # certification
 Certificates for theorem provers
 
@@ -17,7 +21,7 @@ The format is as follows:
 {
     "graph": {
         "vertexSize": ⟨number-of-vertices⟩,
-        "adjancencyList" : ⟨adjancency-list⟩
+        "edges" : ⟨edges-list⟩
     },
     "certificate1" : ⋯,
     "certificate2" : ⋯,
@@ -49,12 +53,12 @@ to the root.
 {
     "graph": {
         "vertexSize": 7,
-        "adjancencyList" : [[6,1], [0,2], [1,3], [2,4], [3,5], [4,6], [5,0]]
+        "edges" : [ [ 1, 2 ], [ 1, 7 ], [ 2, 3 ], [ 3, 4 ], [ 4, 5 ], [ 5, 6 ], [ 6, 7 ] ]
     },
     "connectivityCertificate": {
         "root": 6,
-        "next": [[0,6], [1,2], [2,3], [3,4], [4,5], [5,6], [6,6]],
-        "distToRoot": [[1,1], [1,5], [2,4], [3,3], [4,2], [5,1], [6,0]]
+        "next": [ [0, 6], [1, 2], [2, 3], [3, 4], [4, 5], [5, 6], [6, 6] ],
+        "distToRoot": [ [1, 1], [1, 5], [2, 4], [3, 3], [4, 2], [5, 1], [6, 0] ]
     }
 }
 ```
