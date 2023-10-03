@@ -16,7 +16,14 @@ for i in [1..DigraphNrVertices(g)] do
     next[i] := Concatenation([i], next[i]);
   fi;
 od;
-distToRoot := [];
+distToRoot := [ ];
+for i in [1..DigraphNrVertices(g)] do
+  if i = root then
+    Add(distToRoot, [i,0]);
+  else
+    Add(distToRoot, [i, Length(DigraphShortestPath(reverse_spanning_tree,i,root)[1])-1] );
+  fi;
+od;
 return rec( root := root,
             next := next,
       distToRoot := distToRoot);
