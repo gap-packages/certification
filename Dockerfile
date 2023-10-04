@@ -11,6 +11,16 @@ ENV GAP_VERSION 4.11.1
 
 USER gap
 
+# install newer Digraphs
+WORKDIR /home/gap/inst/gap-${GAP_VERSION}/pkg
+
+RUN rm -rf digraphs* \
+    && wget https://github.com/digraphs/Digraphs/releases/download/v1.6.3/digraphs-1.6.3.tar.gz \
+    && gzip -dc digraphs-1.6.3.tar.gz | tar xpv \
+    && cd digraphs* \
+    && ./configure \
+    && make
+
 # install this package
 RUN mkdir /home/gap/inst/gap-${GAP_VERSION}/pkg/certification
 
