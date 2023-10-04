@@ -9,8 +9,10 @@ namespace GAP2Lean
 
 open Qq
 
-def forallFin {n : Nat} (p : Fin n → Prop) [DecidablePred p] : Bool := decide (∀ x, p x)
-def forallVertex {G : Graph} (p : G.vertex → Prop) [DecidablePred p] : Bool := decide (∀ v, p v)
+-- lifting from exception monad to the Elab.Command monad
+def liftExcept {α : Type} {m} [Monad m] [Lean.MonadError m] : Except String α → m α
+  | .ok res => pure res
+  | .error msg => throwError msg
 
 def edgeOfInfo (n : Q(Nat)) (p : Nat × Nat) : Except String Q(Edge $n) := do
   have a : Q(Nat) := Lean.mkRawNatLit p.1
@@ -28,38 +30,24 @@ def vertexOfInfo (G : Q(Graph)) (k : Nat) : Except String Q(Graph.vertex $G) := 
   finOfInfo (q(Graph.vertexSize $G)) k
 
 -- Convert a sub-array into a set tree
-partial def stree_from_array {α : Q(Type)} (a : Array Q($α)) (low high : ℕ) : Q(STree $α) :=
+partial def streeOfArray {α : Q(Type)} (a : Array Q($α)) (low high : ℕ) : Q(STree $α) :=
   if low >= high then
     q(.empty)
   else if low + 1 = high then
     q(.leaf $(a[low]!))
   else
     let middle := (low + high) / 2
-    let left := stree_from_array a low middle
-    let right := stree_from_array a (middle + 1) high
+    let left := streeOfArray a low middle
+    let right := streeOfArray a (middle + 1) high
     q(.node $(a[middle]!) $left $right)
 
-partial def streeOfInfo {α : Q(Type)} {β : Type}
-  (valOfInfo : β → Except String Q($α))
-  (arr : Array β)
-  : Except String Q(STree $α) := do
+partial def streeOfInfo {α : Q(Type)} {β : Type} (valOfInfo : β → Except String Q($α)) (arr : Array β) :
+    Except String Q(STree $α) := do
   let arr ← arr.mapM valOfInfo
-  return stree_from_array arr 0 arr.size
-
-partial def streeOfJson {α : Q(Type)}
-  (valOfJson : Lean.Json → Except String Q($α))
-  (j : Lean.Json)
-  : Except String Q(STree $α) := do
-  let arr ← j.getArr? <|> throw "array expected in streeOfJson"
-  let arr ← arr.mapM valOfJson
-  return stree_from_array arr 0 arr.size
-
-def pairOfJson (j : Lean.Json) : Except String (Lean.Json × Lean.Json) := do
-  let arr ← j.getArr? <|> throw "pair expected"
-  pure (arr[0]!, arr[1]!)
+  return streeOfArray arr 0 arr.size
 
 -- Convert a sub-array into a map tree
-partial def TreeMap_of_array {α β : Q(Type)}
+partial def treeMapOfArray {α β : Q(Type)}
   (arr : Array (Q($α) × Q($β))) (low high : ℕ) : Except String Q(Map $α $β) :=
   if low >= high then
     pure q(.empty)
@@ -68,8 +56,8 @@ partial def TreeMap_of_array {α β : Q(Type)}
     pure q(.leaf $k $v)
   else do
     let middle := (low + high) / 2
-    let left ← TreeMap_of_array arr low middle
-    let right ← TreeMap_of_array arr (middle + 1) high
+    let left ← treeMapOfArray arr low middle
+    let right ← treeMapOfArray arr (middle + 1) high
     let (k, v) := arr[middle]!
     pure q(.node $k $v $left $right)
 
@@ -89,7 +77,7 @@ partial def mapOfInfo {α β : Q(Type)}
     pure q(emptyMap $H)
   | arr =>
     let (_, default) := arr[0]!
-    let tree ← TreeMap_of_array arr 0 arr.size
+    let tree ← treeMapOfArray arr 0 arr.size
     pure q($(tree).getD $default)
 
 partial def graphOfInfo (info : GraphInfo) : Except String Q(Graph) := do
@@ -106,9 +94,9 @@ def connectivityCertificateOfInfo (G : Q(Graph)) (info : ConnectivityCertificate
   let distInfo ← info.distToRoot.mapM (fun (v, k) => return (← vertexOfInfo G v, Lean.mkRawNatLit k))
   let distToRoot ← mapOfInfo o d distInfo
   have distRootZero : Q(decide ($distToRoot $root = 0) = true) := (q(Eq.refl true) : Lean.Expr)
-  have distZeroRoot : Q(forallVertex (fun (v : Graph.vertex $G) => $distToRoot v = 0 → v = $root) = true) := (q(Eq.refl true) : Lean.Expr)
+  have distZeroRoot : Q(decide (∀ (v : Graph.vertex $G), $distToRoot v = 0 → v = $root) = true) := (q(Eq.refl true) : Lean.Expr)
   have nextRoot : Q(decide ($next $root = $root) = true) := (q(Eq.refl true) : Lean.Expr)
-  have nextAdjacent : Q(forallVertex (fun v => 0 < $distToRoot v → Graph.adjacent v ($next v)) = true) := (q(Eq.refl true) : Lean.Expr)
+  have nextAdjacent : Q(decide (∀ v, 0 < $distToRoot v → Graph.adjacent v ($next v)) = true) := (q(Eq.refl true) : Lean.Expr)
   have distNext : Q(decide (∀ v, 0 < $distToRoot v → $distToRoot ($next v) < $distToRoot v) = true) := (q(Eq.refl true) : Lean.Expr)
   pure q(@ConnectivityCertificate.mk
          $G
@@ -121,11 +109,6 @@ def connectivityCertificateOfInfo (G : Q(Graph)) (info : ConnectivityCertificate
          (of_decide_eq_true $nextAdjacent)
          (of_decide_eq_true $distNext)
         )
-
--- lifting from exception monad to the Elab.Command monad
-def liftExcept {α : Type} : Except String α → Lean.Elab.Command.CommandElabM α
-  | .ok res => pure res
-  | .error msg => throwError msg
 
 -- A name for a cerficicate
 def certificateName (graphName: Lean.Name) (certName: String) : Lean.Name :=
@@ -160,11 +143,8 @@ elab "load_graph" graphName:ident fileName:str : command => do
   }
   Lean.Elab.Command.liftTermElabM <| Lean.Meta.addInstance connectivityCertificateName .scoped 42
 
-
-load_graph cow "cert.json"
-#print cow
-#check connected_of_certificate cow
-
-
+-- load_graph cow "cert.json"
+-- #print cow
+-- #check connected_of_certificate cow
 
 end GAP2Lean
