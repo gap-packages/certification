@@ -64,27 +64,6 @@ def Graph.adjacentEdge {G : Graph} {u v : G.vertex} :
     case val => exact Edge.mk v u v_lt_u
     case property => simp_all [v_lt_u, not_lt_of_lt, ltByCases, adjacent, badjacent]
 
--- lemma Graph.adjacentEdge_lt_fst {G : Graph} {u v : G.vertex} (uv : G.adjacent u v):
---   u < v -> G.fst (G.adjacentEdge uv).val = u := by
---   intro u_lt_v
---   simp [u_lt_v, ltByCases, adjacentEdge]
-
--- lemma Graph.adjacentEdge_gt_fst {G : Graph} {u v : G.vertex} (uv : G.adjacent u v):
---   v < u -> G.fst (G.adjacentEdge uv).val = v := by
---   intro v_lt_u
---   simp [v_lt_u, not_lt_of_lt, ltByCases, adjacentEdge]
-
--- lemma Graph.adjacentEdge_lt_snd {G : Graph} {u v : G.vertex} (uv : G.adjacent u v):
---   u < v -> G.snd (G.adjacentEdge uv).val = u := by
---   intro u_lt_v
---   apply Fin.eq_of_val_eq
---   simp [Fin.eq_of_val_eq, adjacentEdge, ltByCases, u_lt_v, not_lt_of_lt]
---   sorry
-
--- lemma Graph.adjacentEdge_gt_snd {G : Graph} {u v : G.vertex} (uv : G.adjacent u v):
---   v < u -> G.snd (G.adjacentEdge uv).val = v := by
---   sorry
-
 lemma Graph.irreflexiveNeighbor (G : Graph) :
   ∀ (v : G.vertex), ¬ adjacent v v := by simp [ltByCases, adjacent, badjacent]
 
@@ -93,7 +72,7 @@ lemma Graph.symmetricNeighbor (G : Graph) :
     intros u v
     apply ltByCases u v <;> (intro h ; simp [ltByCases, not_lt_of_lt, h, adjacent, badjacent])
 
--- the neighborhood of a graph
+-- the neighborhood of a vertex, as a set
 @[reducible]
 def Graph.neighborhood (G : Graph) (v : G.vertex) :=
   { u : G.vertex // G.badjacent v u }
@@ -101,11 +80,11 @@ def Graph.neighborhood (G : Graph) (v : G.vertex) :=
 -- the degree of a vertex
 def Graph.degree (G : Graph) (v : G.vertex) : Nat := Fintype.card (G.neighborhood v)
 
--- the minimal vertex degree
+-- the minimal vertex degree, equals ⊤ for empty graph
 def Graph.minDegree (G : Graph) : WithTop Nat :=
   Finset.inf (Fin.fintype G.vertexSize).elems (fun v => G.degree v)
 
--- the maximal vertex degree
+-- the maximal vertex degree, equals ⊥ for empty graph
 def Graph.maxDegree (G : Graph) : WithBot Nat :=
   Finset.sup (Fin.fintype G.vertexSize).elems (fun v => G.degree v)
 

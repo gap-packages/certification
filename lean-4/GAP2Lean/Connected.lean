@@ -40,32 +40,39 @@ def Graph.is_connected (G : Graph) := ∀ (u v : G.vertex), G.connected u v
 A certificate for connected components is a rooted directed spanning tree rooted
 at its component root.
 -/
-class ConnectedCertificate (G : Graph) : Type :=
+class ConnectivityCertificate (G : Graph) : Type :=
 
-  /-- the root of the spanning tree -/
+  /-- The root of the spanning tree. -/
   root : G.vertex
 
   /--
-  for each vertex that is not a root, the next step of the path leading to the
-  root (and the root maps to itself)
+  For each vertex that is not a root, the next step of the path leading to the
+  root (and the root maps to itself).
   -/
   next : G.vertex → G.vertex
 
-  -- To ensure that next is cycle-free, we witness the fact that "next" takes us closer to the root.
-  -- the distance of a vertex to its component root
+  /--
+  To ensure that next is cycle-free, we witness the fact that "next" takes us closer to the root.
+  the distance of a vertex to its component root
+  -/
   distToRoot : G.vertex → Nat
-  -- a root is at distance 0 from itself
+
+  /-- A root is at distance 0 from itself -/
   distRootZero : distToRoot root = 0
-  -- a vertex is a root if its distance to a root is 0
+
+  /-- A vertex is a root if its distance to a root is 0 -/
   distZeroRoot : ∀ (v : G.vertex), distToRoot v = 0 → v = root
-  -- a root is a fixed point of next
+
+  /--- A root is a fixed point of next -/
   nextRoot : next root = root
-  -- each vertex that is not a root is adjacent to the next one
+
+  /-- Each vertex that is not a root is adjacent to the next one -/
   nextAdjacent : ∀ v, 0 < distToRoot v → G.adjacent v (next v)
-  -- distance to root decreases as we travel along the path given by next
+
+  /-- distance to root decreases as we travel along the path given by next -/
   distNext : ∀ v, 0 < distToRoot v → distToRoot (next v) < distToRoot v
 
--- Auxuliary induction principle (think of f x as a "height" of x)
+/-- Auxuliary induction principle (think of f x as a "height" of x) -/
 theorem heightInduction {α : Type} (f : α → Nat) (P : α → Prop) :
   (∀ x, (∀ y, f y < f x → P y) → P x) → ∀ x, P x := by
   intros ind a
@@ -80,15 +87,15 @@ theorem heightInduction {α : Type} (f : α → Nat) (P : α → Prop) :
   }
   exact @WellFounded.fix _ Q Nat.lt (Nat.lt_wfRel.wf) Qstep (f a) a rfl
 
--- Is this silly lemma somewhere in the prelude?
+/-- Is this silly lemma somewhere in the prelude? -/
 lemma zero_or_lt : ∀ (n : Nat), n = 0 ∨ 0 < n := by
   intro n
   cases n
   · apply Or.inl ; simp
   · apply Or.inr ; simp
 
--- Given a connected certificate, each vertex is connected to the root
-lemma connectedToRoot (G : Graph) [C : ConnectedCertificate G] :
+/-- Given a connected certificate, each vertex is connected to the root -/
+lemma connectedToRoot (G : Graph) [C : ConnectivityCertificate G] :
   ∀ v, G.connected v C.root := by
   apply heightInduction C.distToRoot (fun v => G.connected v C.root)
   intros v ih
@@ -102,8 +109,8 @@ lemma connectedToRoot (G : Graph) [C : ConnectedCertificate G] :
       apply C.distNext
       assumption
 
--- From a components certificate we can derive the connected components
-instance {G : Graph} [C : ConnectedCertificate G] : G.is_connected := by
+/-- Derive the fact that a graph is connected from a components certificate  -/
+theorem connected_of_certificate (G : Graph) [C : ConnectivityCertificate G] : G.is_connected := by
   intros u v
   apply G.connected_trans u C.root v
   · apply connectedToRoot

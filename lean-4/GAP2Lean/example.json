@@ -1,4 +1,10 @@
 { "graph" : {
-    "vertexSize" : 4,
-    "edges" : [[0,1], [0,2], [1,2]]
-}}
+    "vertexSize" : 2,
+    "edges" : [ [0, 1] ]
+  },
+  "connectivityCertificate" : {
+    "root": 0,
+    "next": [ [0, 0], [1, 0] ],
+    "distToRoot": [ [0, 0], [1, 1] ]
+  }
+}
