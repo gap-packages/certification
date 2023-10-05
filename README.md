@@ -31,7 +31,7 @@ The format is as follows:
 The vertices are numbers from `0` to `⟨number-of-vertices⟩` (excluded). An adjancency list is a list of lists of
 integers. The `n`-th list is the list of vertices of vertex `x_n`.
 
-### Connectivity witness
+### Connectivity certificate
 
 A connectivity certificate is as follows:
 ```
@@ -46,19 +46,51 @@ The `next` field is a map from vertices to vertices, which takes each vertex to 
 (unique) path to the root. The root must map to itself. The `distToRoot` maps each vertex to the distance
 to the root.
 
-
 #### Example: The cycle on 7 vertices
 
 ```
 {
     "graph": {
         "vertexSize": 7,
-        "edges" : [ [ 1, 2 ], [ 1, 7 ], [ 2, 3 ], [ 3, 4 ], [ 4, 5 ], [ 5, 6 ], [ 6, 7 ] ]
+        "edges" : [ [0, 1], [0, 6], [ 1, 2 ], [ 1, 7 ], [ 2, 3 ], [ 3, 4 ], [ 4, 5 ], [ 5, 6 ] ]
     },
     "connectivityCertificate": {
         "root": 6,
         "next": [ [0, 6], [1, 2], [2, 3], [3, 4], [4, 5], [5, 6], [6, 6] ],
         "distToRoot": [ [1, 1], [1, 5], [2, 4], [3, 3], [4, 2], [5, 1], [6, 0] ]
+    }
+}
+```
+
+### Disconnectivity certificate
+
+A disconnectivity certificate is as follows:
+```
+"disconnectivityCertificate" : {
+    "color" : ⟨vertex-color-map⟩,
+    "vertex0" : ⟨vertex₀⟩,
+    "vertex1" : ⟨vertex₁⟩
+}
+```
+It must satisfy the following conditions:
+
+* `⟨vertex-color-map⟩` maps every vertex to `0` or `1`,
+* `⟨vertex₀⟩` and `⟨vertex₁⟩` are vertices,
+* the color of `vertex₀` is `0` and the color of `vertex₁` is `1`,
+* for every edge from `u` to `v`, the endpoints `u` and `v` have the same color
+
+#### Example: the graph `0--1, 2`
+
+```
+{
+    "graph": {
+        "vertexSize": 3,
+        "edges" : [ [0, 1] ]
+    },
+    "connectivityCertificate": {
+        "color" : [0, 0], [1, 0], [2, 1]],
+        "vertex0" : 0,
+        "vertex1" : 1
     }
 }
 ```
