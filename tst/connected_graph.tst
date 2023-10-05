@@ -20,12 +20,13 @@ gap> res := IsConnectedDigraph_Certified(D);
         rec( 
           edges := [ [ 0, 1 ], [ 0, 6 ], [ 1, 2 ], [ 2, 3 ], [ 3, 4 ], 
               [ 4, 5 ], [ 5, 6 ] ], vertexSize := 7 ) ) ]
-gap> D := Digraph([[1, 3], [4], [3], []]);;
+gap> D := Digraph([[2], [1], []]);;
 gap> res := IsConnectedDigraph_Certified(D);
 [ false, 
-  rec( graph := rec( edges := [ [ 0, 0 ], [ 0, 2 ], [ 1, 3 ], [ 2, 2 ] ], 
-          vertexSize := 4 ), 
-      nonconnectivityCertificate := "TO BE IMPLEMENTED" ) ]
+  rec( graph := rec( edges := [ [ 0, 1 ] ], vertexSize := 3 ), 
+      nonconnectivityCertificate := 
+        rec( color := [ [ 0, 0 ], [ 1, 0 ], [ 2, 1 ] ], vertex0 := 0, 
+          vertex1 := 2 ) ) ]
 gap> STOP_TEST("connected_graph.tst");
 
 #############################################################################

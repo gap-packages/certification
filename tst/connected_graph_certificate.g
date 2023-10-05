@@ -57,6 +57,32 @@ return rec( root := root-1,
 end;
 
 
+# For a non-connected graph, the certificate is its colouring and
+# two vertices of different colours.
+NonConnectivityCertificate2Lean:=function(g)
+local dcc, vertex_color_map, i, j;
+dcc := DigraphConnectedComponents(g);
+
+# vertex colour map
+vertex_color_map:=[];
+# vertices of colour 0
+for i in dcc.comps[1] do
+  Add(vertex_color_map, [i-1, 0]);
+od;
+# the rest is of colour 1
+for j in [2..Length(dcc.comps)] do
+  for i in dcc.comps[j] do
+    Add(vertex_color_map, [i-1, 1]);
+  od; 
+od;
+ 
+# Assemble the output (remember the shift to number vertices from zero)
+return rec( color := vertex_color_map,
+          vertex0 := dcc.comps[1][1]-1,
+          vertex1 := dcc.comps[2][1]-1,);
+
+end;
+
 # Put all together into the certification function
 connected_graph_certificate := function( is_connected, g )
 local cr;
@@ -65,7 +91,7 @@ if is_connected then
              connectivityCertificate := ConnectivityCertificate2Lean(g) );
 else
   cr := rec( graph := Graph2Lean(g),
-             nonconnectivityCertificate := "TO BE IMPLEMENTED" );
+             nonconnectivityCertificate := NonConnectivityCertificate2Lean(g) );
 fi;
 return cr;
 end;
