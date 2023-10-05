@@ -90,7 +90,7 @@ It must satisfy the following conditions:
     "connectivityCertificate": {
         "color" : [0, 0], [1, 0], [2, 1]],
         "vertex0" : 0,
-        "vertex1" : 1
+        "vertex1" : 2
     }
 }
 ```
