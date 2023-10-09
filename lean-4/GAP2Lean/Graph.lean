@@ -1,18 +1,37 @@
 import GAP2Lean.OrdEq
-import GAP2Lean.TreeSet
-import GAP2Lean.TreeMap
+import GAP2Lean.SetTree
+import GAP2Lean.Map
 import GAP2Lean.Edge
 
 namespace GAP2Lean
 
-structure Graph : Type :=
+structure GraphData : Type where
   vertexSize : Nat
-  edgeTree : STree (Edge vertexSize)
-  -- edgeCorrect : edgeTree.correct := by rfl
+  edgeTree : SetTree (Edge vertexSize)
+deriving Lean.FromJson
+
+structure Graph extends GraphData where
+  edgeCorrect : edgeTree.isCorrect := by rfl
+
+instance Graph.fromJson : Lean.FromJson Graph where
+  fromJson? := fun json => do
+    let graphData ← Lean.FromJson.fromJson? json (α := GraphData)
+    if h : graphData.edgeTree.isCorrect then
+      pure (Graph.mk graphData h)
+    else
+      throw "invalid edges in a graph"
 
 -- the type of graph vertices
 @[simp, reducible]
 def Graph.vertex (G : Graph) := Fin G.vertexSize
+
+instance (G : Graph) : Lean.FromJson G.vertex where
+  fromJson? := fun json => do
+    let v ← json.getNat?
+    Nat.ltByCases (a := v) (b := G.vertexSize)
+      (fun v_lt_n => pure (Fin.mk v v_lt_n))
+      (fun _ => throw "invalid json vertex")
+      (fun _ => throw "invalid json vertex")
 
 -- the underlying type of edges (pairs (i,j) such that j < i < G.vertexSize)
 @[simp, reducible]

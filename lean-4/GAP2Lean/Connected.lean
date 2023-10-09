@@ -2,7 +2,7 @@ import GAP2Lean.Graph
 
 namespace GAP2Lean
 
--- Vertice are  connected if they're in the equivalence envelope of adjacency
+-- Vertice are connected if they're in the equivalence envelope of adjacency
 @[simp]
 def Graph.connected {G : Graph} : G.vertex → G.vertex → Prop := EqvGen G.adjacent
 
