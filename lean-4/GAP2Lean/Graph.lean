@@ -64,13 +64,39 @@ def Graph.adjacentEdge {G : Graph} {u v : G.vertex} :
     case val => exact Edge.mk v u v_lt_u
     case property => simp_all [v_lt_u, not_lt_of_lt, ltByCases, adjacent, badjacent]
 
-lemma Graph.irreflexiveNeighbor (G : Graph) :
+lemma Graph.irreflexiveAdjacent (G : Graph) :
   ∀ (v : G.vertex), ¬ adjacent v v := by simp [ltByCases, adjacent, badjacent]
 
 lemma Graph.symmetricNeighbor (G : Graph) :
   ∀ (u v : G.vertex), adjacent u v → adjacent v u := by
     intros u v
     apply ltByCases u v <;> (intro h ; simp [ltByCases, not_lt_of_lt, h, adjacent, badjacent])
+
+/--
+  For a symmetric relation on vertices, if it holds for all endpoints of all edges,
+  then it holds for all pairs of adjacent vertices.
+-/
+def Graph.allEdges {G : Graph} (R : G.vertex → G.vertex → Prop) :
+    (∀ u v, R u v → R v u) →
+    (∀ (e : G.edge), R e.val.fst e.val.snd) →
+    (∀ u v, G.adjacent u v → R u v)
+  := by
+  intro R_symm all_edge u v uv
+  apply ltByCases u v
+  · intro u_lt_v
+    let A := all_edge (G.adjacentEdge uv)
+    simp [adjacentEdge, ltByCases, u_lt_v] at A
+    exact A
+  · intro eq
+    exfalso
+    apply G.irreflexiveAdjacent u
+    rw [←eq] at uv
+    assumption
+  · intro v_lt_u
+    let A := all_edge (G.adjacentEdge uv)
+    simp [adjacentEdge, ltByCases, v_lt_u, not_lt_of_lt] at A
+    apply R_symm
+    exact A
 
 -- the neighborhood of a vertex, as a set
 @[reducible]

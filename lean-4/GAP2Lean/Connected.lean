@@ -40,7 +40,7 @@ def Graph.is_connected (G : Graph) := ∀ (u v : G.vertex), G.connected u v
 A certificate for connected components is a rooted directed spanning tree rooted
 at its component root.
 -/
-class ConnectivityCertificate (G : Graph) : Type :=
+class ConnectivityCertificate (G : Graph) : Type where
 
   /-- The root of the spanning tree. -/
   root : G.vertex
@@ -60,7 +60,7 @@ class ConnectivityCertificate (G : Graph) : Type :=
   /-- A root is at distance 0 from itself -/
   distRootZero : distToRoot root = 0
 
-  /-- A vertex is a root if its distance to a root is 0 -/
+  /-- A vertex is a root if its distance to root is 0 -/
   distZeroRoot : ∀ (v : G.vertex), distToRoot v = 0 → v = root
 
   /--- A root is a fixed point of next -/
@@ -109,12 +109,56 @@ lemma connectedToRoot (G : Graph) [C : ConnectivityCertificate G] :
       apply C.distNext
       assumption
 
-/-- Derive the fact that a graph is connected from a components certificate  -/
-theorem connected_of_certificate (G : Graph) [C : ConnectivityCertificate G] : G.is_connected := by
+/-- A graph is connected it is has a connectivity certificate.  -/
+theorem connected (G : Graph) [C : ConnectivityCertificate G] : G.is_connected := by
   intros u v
-  apply G.connected_trans u C.root v
+  apply G.connected_trans
   · apply connectedToRoot
   · apply G.connected_symm
     apply connectedToRoot
+
+def Graph.is_disconnected (G : Graph) := ∃ (u v : G.vertex), ¬ G.connected u v
+
+/-- A certificate for disconnected graphs. -/
+class DisconnectivityCertificate (G : Graph) : Type where
+
+  /-- A coloring of vertices by colors 0 and 1 -/
+  color : G.vertex → Fin 2
+
+  /-- For each color a vertex of that color. -/
+  vertex0 : G.vertex
+  vertex1 : G.vertex
+
+  /-- Neighbors have the same color -/
+  edge_color : ∀ (e : G.edge), color e.val.fst = color e.val.snd
+
+  /-- Chosen vertices have the correct color -/
+  vertex0_color : color vertex0 = 0
+  vertex1_color : color vertex1 = 1
+
+/-- Connected vertices have the same color -/
+theorem connected_color {G : Graph} [D : DisconnectivityCertificate G] (u v : G.vertex) :
+    G.connected u v → D.color u = D.color v  := by
+  intro Cuv
+  induction Cuv
+  case rel a b adj =>
+     apply G.allEdges (fun a b => D.color a = D.color b)
+     · intros u v eq
+       symm
+       assumption
+     · exact D.edge_color
+     · assumption
+  case refl a => rfl
+  case symm a b _ eq => apply Eq.symm eq
+  case trans a b c _ _ eq1 eq2 => apply Eq.trans eq1 eq2
+
+/-- A graph is disconnected it is has a disconnectivity certificate.  -/
+theorem disconnected (G : Graph) [D : DisconnectivityCertificate G] : G.is_disconnected := by
+  exists D.vertex0, D.vertex1
+  intro C01
+  apply @absurd (D.color D.vertex0 = D.color D.vertex1)
+  · apply connected_color
+    assumption
+  · simp [D.vertex0_color, D.vertex1_color]
 
 end GAP2Lean

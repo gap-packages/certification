@@ -110,6 +110,26 @@ def connectivityCertificateOfInfo (G : Q(Graph)) (info : ConnectivityCertificate
          (of_decide_eq_true $distNext)
         )
 
+def disconnectivityCertificateOfInfo (G : Q(Graph)) (info : DisconnectivityCertificateInfo) : Except String Q(ConnectivityCertificate $G) := do
+  let o := q(instOrdFin (Graph.vertexSize $G))
+  let d := q(Fintype.decidableForallFintype)
+  let colorInfo ← info.color.mapM (fun (v, c) => return (← vertexOfInfo G v, Lean.mkRawNatLit c))
+  let color ← mapOfInfo o d colorInfo
+  let vertex0 ← vertexOfInfo G info.vertex0
+  let vertex1 ← vertexOfInfo G info.vertex1
+  let edgeColor : Q(((Graph.edgeTree $G).all (fun e => True)) = true) := (q(Eq.refl true) : Lean.Expr)
+  have vertex0_color : Q(decide ($color $vertex0 = 0) = true) := (q(Eq.refl true) : Lean.Expr)
+  have vertex1_color : Q(decide ($color $vertex1 = 1) = true) := (q(Eq.refl true) : Lean.Expr)
+  pure q(@DisonnectivityCertificate.mk
+         $G
+         $color
+         $vertex0
+         $vertex1
+         $edgeColor
+         $vertex0_color
+         $vertex1_color
+        )
+
 -- A name for a cerficicate
 def certificateName (graphName: Lean.Name) (certName: String) : Lean.Name :=
   (.str graphName certName)
@@ -129,22 +149,47 @@ elab "load_graph" graphName:ident fileName:str : command => do
   }
   Lean.setReducibleAttribute graphName
   have graph : Q(Graph) := Lean.mkConst graphName []
-  -- load the connectivity certificate
-  let connectivityCertificateName := certificateName graphName "connectivityCertificateI"
-  let connectivityCertificateQ : Q(ConnectivityCertificate $graph) ←
-    liftExcept <| connectivityCertificateOfInfo graph info.connectivityCertificate
-  Lean.Elab.Command.liftCoreM <| Lean.addAndCompile <| .defnDecl {
-    name := connectivityCertificateName
-    levelParams := []
-    type := q(ConnectivityCertificate $graph)
-    value := connectivityCertificateQ
-    hints := .regular 0
-    safety := .safe
-  }
-  Lean.Elab.Command.liftTermElabM <| Lean.Meta.addInstance connectivityCertificateName .scoped 42
+
+  -- load the connectivity certificate, if present
+  match info.connectivityCertificate? with
+  | .none => pure ()
+  | .some cert =>
+    let connectivityCertificateName := certificateName graphName "connectivityCertificateI"
+    let connectivityCertificateQ : Q(ConnectivityCertificate $graph) ←
+      liftExcept <| connectivityCertificateOfInfo graph cert
+    Lean.Elab.Command.liftCoreM <| Lean.addAndCompile <| .defnDecl {
+      name := connectivityCertificateName
+      levelParams := []
+      type := q(ConnectivityCertificate $graph)
+      value := connectivityCertificateQ
+      hints := .regular 0
+      safety := .safe
+    }
+    Lean.Elab.Command.liftTermElabM <| Lean.Meta.addInstance connectivityCertificateName .scoped 42
+
+  -- load the disconnectivity certificate, if present
+  match info.disconnectivityCertificate? with
+  | .none => pure ()
+  | .some cert =>
+    let disconnectivityCertificateName := certificateName graphName "disconnectivityCertificateI"
+    let disconnectivityCertificateQ : Q(ConnectivityCertificate $graph) ←
+      liftExcept <| disconnectivityCertificateOfInfo graph cert
+    Lean.Elab.Command.liftCoreM <| Lean.addAndCompile <| .defnDecl {
+      name := disconnectivityCertificateName
+      levelParams := []
+      type := q(DisconnectivityCertificate $graph)
+      value := disconnectivityCertificateQ
+      hints := .regular 0
+      safety := .safe
+    }
+    Lean.Elab.Command.liftTermElabM <| Lean.Meta.addInstance disconnectivityCertificateName .scoped 42
+
 
 -- load_graph cow "cert.json"
 -- #print cow
--- #check connected_of_certificate cow
+-- #check (connected cow)
+-- load_graph bull "cube.json"
+
+-- #check connected bull
 
 end GAP2Lean

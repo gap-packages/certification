@@ -6,16 +6,15 @@ import GAP2Lean.OrdEq
 
 namespace GAP2Lean
 
-structure Edge (m : Nat) :=
-  (fst : Fin m)
-  (snd : Fin m)
-  (ord : fst < snd)
-deriving Fintype
+structure Edge (m : Nat) where
+  fst : Fin m
+  snd : Fin m
+  ord : fst < snd
+deriving Fintype, Ord -- assuming Ord derives the lexicographic order
 
-def Edge.compare {m : Nat} (e1 e2 : Edge m) :=
-  lexOrd.compare (e1.fst, e1.snd) (e2.fst, e2.snd)
-
-instance (m : Nat): Ord (Edge m) := ⟨Edge.compare⟩
+-- def Edge.compare {m : Nat} (e1 e2 : Edge m) :=
+--   lexOrd.compare (e1.fst, e1.snd) (e2.fst, e2.snd)
+-- instance (m : Nat): Ord (Edge m) := ⟨Edge.compare⟩
 
 -- smart constructor used to load JSON files
 def Edge.mk' (n a b : Nat) (H1 : Nat.blt a b = true) (H2 : Nat.blt b n = true) : Edge n :=
