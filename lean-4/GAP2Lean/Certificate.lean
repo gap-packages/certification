@@ -1,5 +1,5 @@
 import Lean
-import GAP2Lean.Map
+import GAP2Lean.MapTree
 import GAP2Lean.Graph
 
 namespace GAP2Lean
@@ -22,7 +22,7 @@ structure ConnectivityData (G : Graph) : Type where
 
 deriving Lean.FromJson
 
-structure ConnectivityCertificate (G : Graph) extends ConnectivityData G where
+class ConnectivityCertificate (G : Graph) extends ConnectivityData G where
   /-- A root is at distance 0 from itself -/
   distRootZero : distToRoot root = 0
 
@@ -104,13 +104,13 @@ instance DisconnectivityCertificate.fromJson (G : Graph) : Lean.FromJson (Discon
     else
       throw "bi-colored edge encountered"
 
-structure GraphInfo : Type where
+structure GraphCertificate : Type where
   graph : Graph
   connectivityCertificate? : Option (ConnectivityCertificate graph)
   disconnectivityCertificate? : Option (DisconnectivityCertificate graph)
-deriving Lean.FromJson
+deriving Lean.FromJson, Inhabited
 
-def loadGraphInfo (fileName : System.FilePath) : IO GraphInfo := do
+def loadGraphCertificate (fileName : System.FilePath) : IO GraphCertificate := do
   let file ← IO.FS.readFile fileName
   match (Lean.Json.parse file >>= Lean.fromJson?) with
   | .ok info => pure info

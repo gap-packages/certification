@@ -1,6 +1,5 @@
-import GAP2Lean.OrdEq
 import GAP2Lean.SetTree
-import GAP2Lean.Map
+import GAP2Lean.MapTree
 import GAP2Lean.Edge
 
 namespace GAP2Lean
@@ -8,10 +7,13 @@ namespace GAP2Lean
 structure GraphData : Type where
   vertexSize : Nat
   edgeTree : SetTree (Edge vertexSize)
-deriving Lean.FromJson
+deriving Lean.FromJson, Inhabited
 
 structure Graph extends GraphData where
   edgeCorrect : edgeTree.isCorrect := by rfl
+
+instance: Inhabited Graph where
+  default := Graph.mk default
 
 instance Graph.fromJson : Lean.FromJson Graph where
   fromJson? := fun json => do

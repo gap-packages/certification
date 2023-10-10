@@ -64,7 +64,7 @@ instance MapTree.fromJson {α β : Type} [Ord α] [jα : Lean.FromJson α] [jβ 
     let arr := arr.qsort (fun u v => compare u.1 v.1 = .lt)
     pure (ofArray arr)
 
-/-- 
+/--
   The definition of a tree does not actually require it to be a search tree.
   This predicate states that a given tree is a search tree with the given
   bounds on the keys contained in it.

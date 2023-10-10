@@ -13,9 +13,7 @@ inductive SetTree.{u} (α : Type u) : Type u
   | empty : SetTree α
   | leaf : α → SetTree α
   | node : α → SetTree α → SetTree α → SetTree α
-deriving Repr
-
-instance {α : Type} : Inhabited (SetTree α) := ⟨.empty⟩
+deriving Repr, Inhabited
 
 /--
   Given a subarray of key-value pairs, generate the corresponding balanced search tree.

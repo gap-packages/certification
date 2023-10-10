@@ -1,8 +1,6 @@
 import Lean
 import Mathlib.Init.Order.Defs
 import Mathlib.Tactic
-import Mathlib.Data.Sigma.Order
-import GAP2Lean.OrdEq
 
 namespace GAP2Lean
 
@@ -28,7 +26,7 @@ def Edge.mk_except (n a b : Nat) : Except String (Edge n) :=
       (fun _ => throw "loops are not valid edges")
       (fun b_lt_a => pure (Edge.mk (Fin.mk b h.2) (Fin.mk a h.1) b_lt_a))
   else
-    throw "edge endpoints out of bound" 
+    throw "edge endpoints out of bound"
 
 instance Edge.fromJson {m : Nat} : Lean.FromJson (Edge m) where
   fromJson? := fun json => do

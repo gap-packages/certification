@@ -184,6 +184,4 @@ def Bounded.liftFunction {α β : Type} : (α → β) → (Bounded α → Bounde
     | element y => Bounded.extendFunction f y
     | top => top
 
-macro "↑↑" f:term : term => `(Bounded.liftFunction $f)
-
 end GAP2Lean
