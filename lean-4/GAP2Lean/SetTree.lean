@@ -1,7 +1,6 @@
 import Mathlib
 
 import GAP2Lean.BoundedOrder
-import GAP2Lean.OrdEq
 
 namespace GAP2Lean
 
@@ -86,28 +85,28 @@ def SetTree.all {α : Type} [Ord α] (t : SetTree α) (p : α → Prop) [Decidab
     elements of the set represented by the tree. Note taht since we do not assume
     the tree to be correct, there may be some vertices that are not finable by
     binary search, and these do not appear in the represented set. -/
-theorem SetTree.all_forall {α : Type} [Ord α] [OrdEq α] (t : SetTree α) (p : α → Prop) [DecidablePred p] :
+theorem SetTree.all_forall {α : Type} [LinearOrder α] (t : SetTree α) (p : α → Prop) [DecidablePred p] :
   t.all p → ∀ x, SetTree.mem x t → p x := by
   induction t
   case empty => simp
   case leaf y =>
     simp
     intros py x
-    cases (OrdEq_cases x y) with
-    | inl H => simp [H]
-    | inr G =>
+    cases (lt_trichotomy x y) with
+    | inl x_lt_y => simp [compare_lt_iff_lt.mpr x_lt_y]
+    | inr G =>  
       cases G with
-      | inl H => simp [H.left] ; rw [H.right] ; assumption
-      | inr H => simp [H]
+      | inl x_eq_y => simp [compare_eq_iff_eq.mpr x_eq_y] ; rw [x_eq_y] ; assumption
+      | inr y_lt_x => simp [compare_gt_iff_gt.mpr (gt_iff_lt.mpr y_lt_x)]
   case node y left right ihl ihr =>
     simp
     intros px all_left all_right x
-    cases (OrdEq_cases x y) with
-    | inl H => simp [H.left] ; apply ihl all_left
+    cases (lt_trichotomy x y) with
+    | inl x_lt_y => simp [compare_lt_iff_lt.mpr x_lt_y] ; apply ihl all_left
     | inr G =>
       cases G with
-      | inl H => simp [H.left] ; rw [H.right] ; assumption
-      | inr H => simp [H.left] ; apply ihr all_right
+      | inl x_eq_y => simp [compare_eq_iff_eq.mpr x_eq_y] ; rw [x_eq_y] ; assumption
+      | inr y_lt_x => simp [compare_gt_iff_gt.mpr (gt_iff_lt.mpr y_lt_x)] ; apply ihr all_right
 
 /-- Does there exists an element in the tree that satisfies the given property? -/
 @[simp]
@@ -121,7 +120,7 @@ def SetTree.exi {α : Type} [Ord α] (t : SetTree α) (p : α → Prop) [Decidab
   If the finite set represented by the tree has an element satisfying a given property,
   then the tree contains an element satisfying the property. Note that the converse
   need not hold because we are not assumnig that the tree is correct. -/
-theorem SetTree.exists_exi {α : Type} [Ord α] [OrdEq α] (p : α → Prop) [DecidablePred p] :
+theorem SetTree.exists_exi {α : Type} [LinearOrder α] (p : α → Prop) [DecidablePred p] :
   ∀ (t : SetTree α), (∃ x, SetTree.mem x t ∧ p x) → t.exi p = true := by
   intro t
   induction t
@@ -129,27 +128,24 @@ theorem SetTree.exists_exi {α : Type} [Ord α] [OrdEq α] (p : α → Prop) [De
   case leaf y =>
     simp
     intro x
-    cases (OrdEq_cases x y) with
-    | inl H => simp [H.left]
+    cases (lt_trichotomy x y) with
+    | inl x_lt_y => simp [compare_lt_iff_lt.mpr x_lt_y]
     | inr G =>
       cases G with
-      | inl H => simp [H.left] ; rw [H.right] ; intro ; assumption
-      | inr H => simp [H.left]
+      | inl x_eq_y => simp [compare_eq_iff_eq.mpr x_eq_y] ; rw [x_eq_y] ; intro ; assumption
+      | inr y_lt_x => simp [compare_gt_iff_gt.mpr (gt_iff_lt.mpr y_lt_x)]
   case node y left right ihl ihr =>
     simp
     intro x
-    cases (OrdEq_cases x y) with
-    | inl H => simp [H.left] ; intros ; apply Or.inl ; apply Or.inr ; apply ihl ; exists x
+    cases (lt_trichotomy x y) with
+    | inl x_lt_y => simp [compare_lt_iff_lt.mpr x_lt_y] ; intros ; apply Or.inl ; apply Or.inr ; apply ihl ; exists x
     | inr G =>
       cases G with
-      | inl H => simp [H.left] ; rw [H.right] ; intro ; apply Or.inl ; apply Or.inl ; assumption
-      | inr H => simp [H.left] ; intros ; apply Or.inr ; apply ihr ; exists x
+      | inl x_eq_y => simp [compare_eq_iff_eq.mpr x_eq_y] ; rw [x_eq_y] ; intro ; apply Or.inl ; apply Or.inl ; assumption
+      | inr y_lt_x => simp [compare_gt_iff_gt.mpr (gt_iff_lt.mpr y_lt_x)] ; intros ; apply Or.inr ; apply ihr ; exists x
 
 /-- The underlying set of the tree -/
 @[reducible]
 def SetTree.set {α : Type} [Ord α] (t : SetTree α) := { x : α // t.mem x }
-
--- def SetTree.size_is_card {α : Type} [Ord α] [Fintype α] (t : SetTree α) :
---   Fintype.card t.set = t.size := sorry
 
 end GAP2Lean

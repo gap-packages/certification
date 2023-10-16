@@ -72,6 +72,7 @@ elab "load_graph" graphName:ident fileName:str : command => do
 load_graph cow "cert.json"
 
 #check cow
+#check cow.is_connected
 
 -- load_graph bull "cube.json"
 

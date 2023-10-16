@@ -135,7 +135,7 @@ lemma connected_color {G : Graph} [D : DisconnectivityCertificate G] (u v : G.ve
   intro Cuv
   induction Cuv
   case rel a b adj =>
-     apply G.allEdges (fun a b => D.color a = D.color b)
+     apply G.all_adjacent_of_edges (fun a b => D.color a = D.color b)
      · intros u v eq
        symm
        assumption

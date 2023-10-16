@@ -74,13 +74,20 @@ lemma Graph.symmetricAdjacent (G : Graph) :
     intros u v
     apply ltByCases u v <;> (intro h ; simp [ltByCases, not_lt_of_lt, h, adjacent, badjacent])
 
+/-- An efficient way of checking that a statement holds for all edges. -/
+lemma Graph.all_edges (G : Graph) (p : G.edgeType → Prop) [DecidablePred p] :
+    SetTree.all G.edgeTree p = true → ∀ (e : G.edge), p e.val
+  := by
+    intro H e
+    exact SetTree.all_forall G.edgeTree p H e e.prop
+
 /--
   For a symmetric relation on vertices, if it holds for all endpoints of all edges,
   then it holds for all pairs of adjacent vertices. This is useful for checking
   statements about adjacent vertices, as we can just check all edges instead of
   all pairs of vertices (and skipping the non-adjacent ones).
 -/
-def Graph.allEdges {G : Graph} (R : G.vertex → G.vertex → Prop) :
+def Graph.all_adjacent_of_edges {G : Graph} (R : G.vertex → G.vertex → Prop) :
     (∀ u v, R u v → R v u) →
     (∀ (e : G.edge), R e.val.fst e.val.snd) →
     (∀ u v, G.adjacent u v → R u v)

@@ -109,20 +109,20 @@ def connectivityCertificateOfData (G : Q(Graph)) (C : ConnectivityData) : Q(Conn
   have distToRootMap : Q(MapTree (Graph.vertex $G) Nat) :=
     mapTreeOfArray (C.distToRoot.map (fun (i,j) => (finOfData n i, Lean.mkRawNatLit j)))
   have distToRoot : Q(Graph.vertex $G → Nat) := q(fun v => MapTree.getD $distToRootMap 0 v)
-  have distRootZero : Q($distToRoot $root = 0) := (q(Eq.refl true) : Lean.Expr)
-  have distZeroRoot : Q(∀ (v : Graph.vertex $G), $distToRoot v = 0 → v = $root) := (q(Eq.refl true) : Lean.Expr)
-  have nextRoot : Q($next $root = $root) := (q(Eq.refl true) : Lean.Expr)
-  have nextAdjacent : Q(∀ (v : Graph.vertex $G), 0 < $distToRoot v → Graph.adjacent v ($next v)) := (q(Eq.refl true) : Lean.Expr)
-  have distNext : Q(∀ (v : Graph.vertex $G), 0 < $distToRoot v → $distToRoot ($next v) < $distToRoot v) := (q(Eq.refl true) : Lean.Expr)
+  have distRootZero : Q(decide ($distToRoot $root = 0) = true) := (q(Eq.refl true) : Lean.Expr)
+  have distZeroRoot : Q(decide (∀ (v : Graph.vertex $G), $distToRoot v = 0 → v = $root) = true) := (q(Eq.refl true) : Lean.Expr)
+  have nextRoot : Q(decide ($next $root = $root) = true) := (q(Eq.refl true) : Lean.Expr)
+  have nextAdjacent : Q(decide (∀ (v : Graph.vertex $G), 0 < $distToRoot v → Graph.adjacent v ($next v)) = true) := (q(Eq.refl true) : Lean.Expr)
+  have distNext : Q(decide (∀ (v : Graph.vertex $G), 0 < $distToRoot v → $distToRoot ($next v) < $distToRoot v)) := (q(Eq.refl true) : Lean.Expr)
   q(ConnectivityCertificate.mk
     $root
     $next
     $distToRoot
-    $distRootZero
-    $distZeroRoot
-    $nextRoot
-    $nextAdjacent
-    $distNext)
+    (of_decide_eq_true $distRootZero)
+    (of_decide_eq_true $distZeroRoot)
+    (of_decide_eq_true $nextRoot)
+    (of_decide_eq_true $nextAdjacent)
+    (of_decide_eq_true $distNext))
 
 /-- Construct a disconnectivity certificate from connectivity data -/
 def disconnectivityCertificateOfData (G : Q(Graph)) (D : DisconnectivityData) : Q(DisconnectivityCertificate $G) :=
@@ -132,14 +132,14 @@ def disconnectivityCertificateOfData (G : Q(Graph)) (D : DisconnectivityData) : 
   have color : Q(Graph.vertex $G → Fin 2) := q(fun v => MapTree.getD $colorMap 0 v)
   have vertex0 : Q(Graph.vertex $G) := finOfData n D.vertex0
   have vertex1 : Q(Graph.vertex $G) := finOfData n D.vertex1
-  have edgeColor : Q(∀ (e : Graph.edge $G), $color e.val.fst = $color e.val.snd) := (q(Eq.refl true) : Lean.Expr)
+  have edgeColor : Q(SetTree.all (Graph.edgeTree $G) (fun e => $color e.fst = $color e.snd) = true) := (q(Eq.refl true) : Lean.Expr)
   have vertex0Color : Q($color $vertex0 = 0) := (q(Eq.refl true) : Lean.Expr)
   have vertex1Color : Q($color $vertex1 = 1) := (q(Eq.refl true) : Lean.Expr)
   q(DisconnectivityCertificate.mk
     $color
     $vertex0
     $vertex1
-    $edgeColor
+    (Graph.all_edges $G (fun e => $color e.fst = $color e.snd) $edgeColor)
     $vertex0Color
     $vertex1Color
   )
