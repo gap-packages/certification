@@ -49,22 +49,6 @@ def MapTree.ofArray {α β : Type} (arr : Array (α × β)) : MapTree α β :=
   ofSubarray arr 0 arr.size
 
 /--
-  Convert a JSON array of key-value pairs to a MapTree.
--/
-instance MapTree.fromJson {α β : Type} [Ord α] [jα : Lean.FromJson α] [jβ : Lean.FromJson β] : Lean.FromJson (MapTree α β) where
-  fromJson? := fun json => do
-    let arr ← json.getArr?
-    let arr ← arr.mapM (fun j => do
-      let kvarr ← j.getArr?
-      let k := kvarr[0]!
-      let v := kvarr[1]!
-      let k ← jα.fromJson? k
-      let v ← jβ.fromJson? v
-      pure (k, v))
-    let arr := arr.qsort (fun u v => compare u.1 v.1 = .lt)
-    pure (ofArray arr)
-
-/--
   The definition of a tree does not actually require it to be a search tree.
   This predicate states that a given tree is a search tree with the given
   bounds on the keys contained in it.
@@ -147,26 +131,5 @@ def MapTree.hasKey {α β : Type} [Ord α] (x : α) : MapTree α β → Bool
     | .lt => hasKey x left
     | .eq => true
     | .gt => hasKey y right
-
-/-- A wrapper for representing finite maps as search trees, especially
-    so that they can be converted from JSON.
--/
-def Map (α β : Type) [Ord α] := α → β
-
-instance Map.ofJsonInhbabited {α β : Type} [Ord α] [Inhabited β] [Lean.FromJson α] [Lean.FromJson β] :
-    Lean.FromJson (Map α β) where
-  fromJson? := fun json => do
-    let MapTree ← (MapTree.fromJson (α := α) (β := β)).fromJson? json
-    pure (MapTree.getD default)
-
-instance Map.ofJsonEmpty {α β : Type} [Ord α] [e : IsEmpty α] [Lean.FromJson α] [Lean.FromJson β] :
-    Lean.FromJson (Map α β) where
-  fromJson? := fun _ => pure (fun x => False.elim (e.false x))
-
-instance Map.ofJsonEndo {α : Type} [Ord α] [Lean.FromJson α] :
-    Lean.FromJson (Map α α) where
-  fromJson? := fun json => do
-    let MapTree ← (MapTree.fromJson (α := α) (β := α)).fromJson? json
-    pure (fun x => MapTree.getD x x)
 
 end GAP2Lean

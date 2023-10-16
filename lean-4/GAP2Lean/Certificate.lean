@@ -1,119 +1,147 @@
-import Lean
-import GAP2Lean.MapTree
+import Qq
+import GAP2Lean.JsonData
+import GAP2Lean.SetTree
+import GAP2Lean.Edge
 import GAP2Lean.Graph
+import GAP2Lean.Connectivity
 
 namespace GAP2Lean
 
-structure ConnectivityData (G : Graph) : Type where
-  /-- The root of the spanning tree. -/
-  root : G.vertex
+open Qq
 
-  /--
-  For each vertex that is not a root, the next step of the path leading to the
-  root (and the root maps to itself).
-  -/
-  next : Map G.vertex G.vertex
-
-  /--
-  To ensure that next is cycle-free, we witness the fact that "next" takes us closer to the root.
-  the distance of a vertex to its component root
-  -/
-  distToRoot : Map G.vertex Nat
-
-deriving Lean.FromJson
-
-class ConnectivityCertificate (G : Graph) extends ConnectivityData G where
-  /-- A root is at distance 0 from itself -/
-  distRootZero : distToRoot root = 0
-
-  /-- A vertex is a root if its distance to root is 0 -/
-  distZeroRoot : ∀ (v : G.vertex), distToRoot v = 0 → v = root
-
-  /--- A root is a fixed point of next -/
-  nextRoot : next root = root
-
-  /-- Each vertex that is not a root is adjacent to the next one -/
-  nextAdjacent : ∀ v, 0 < distToRoot v → G.adjacent v (next v)
-
-  /-- distance to root decreases as we travel along the path given by next -/
-  distNext : ∀ v, 0 < distToRoot v → distToRoot (next v) < distToRoot v
-
-instance ConnectivityCertificate.fromJson (G : Graph) : Lean.FromJson (ConnectivityCertificate G) where
-  fromJson? := fun json => do
-    let data ← Lean.FromJson.fromJson? json (α := ConnectivityData G)
-    if h₁ : data.distToRoot data.root = 0 then
-      if h₂ : ∀ (v : G.vertex), data.distToRoot v = 0 → v = data.root then
-        if h₃ : (data.next data.root = data.root) then
-          if h₄ : ∀ v, 0 < data.distToRoot v → G.adjacent v (data.next v) then
-            if h₅ : ∀ v, 0 < data.distToRoot v → data.distToRoot (data.next v) < data.distToRoot v then
-              pure (ConnectivityCertificate.mk data h₁ h₂ h₃ h₄ h₅)
-            else
-              throw "non-monotone distance"
-          else
-            throw "non-descreasing distance to root"
-        else
-          throw "root is at non-zero distance to root"
-      else
-        throw "a non-root has zero distance to root"
+/--
+  Given a subarray of values, generate the corresponding balanced search tree.
+  NB: The subarray must be sorted by keys.
+-/
+partial def setTreeOfSubarray {α : Q(Type)} (arr : Array Q($α)) (low high : Nat) : Q(SetTree $α) :=
+  if ltSize : low < arr.size ∧ high <= arr.size then
+    if _ : low >= high then
+      q(.empty)
+    else if low + 1 = high then
+      let x := arr[low]'(ltSize.1)
+      q(.leaf $x)
     else
-      throw "invalid distance to root"
+      let middle := (low + high).div2
+      let left :=  setTreeOfSubarray arr low middle
+      let right := setTreeOfSubarray arr (middle + 1) high
+      have middle_valid : (low + high).div2 < arr.size := (by
+        rw [Nat.div2_val]
+        have h : (low + high < arr.size + arr.size) → ((low + high) / 2 < arr.size) := (by
+          intro ab_lt_nn
+          rw [←Nat.two_mul] at ab_lt_nn
+          apply Nat.div_lt_of_lt_mul ab_lt_nn)
+        apply h
+        apply Nat.lt_of_le_of_lt (Nat.add_le_add_left ltSize.2 low) (Nat.add_lt_add_right ltSize.1 arr.size))
+      let x := arr[middle]'middle_valid
+      q(.node $x $left $right)
+  else
+    q(.empty)
 
-instance {n : Nat}: Lean.FromJson (Fin n) where
-  fromJson? := fun json => do
-    let k ← json.getNat?
-    if h : k < n then
-      pure (Fin.mk k h)
+/--
+  Given an array of values, generate the corresponding balanced search tree.
+  NB: The array must be sorted by keys.
+-/
+def setTreeOfArray {α : Q(Type)} (arr : Array Q($α)) : Q(SetTree $α) :=
+  setTreeOfSubarray arr 0 arr.size
+
+/--
+  Given a subarray of key-value pairs, generate the corresponding balanced map tree.
+  NB: The subarray must be sorted by keys.
+-/
+partial def mapTreeOfSubarray {α β : Q(Type)} (arr : Array (Q($α) × Q($β))) (low high : Nat) : Q(MapTree $α $β) :=
+  if ltSize : low < arr.size ∧ high <= arr.size then
+    if _ : low >= high then
+      q(.empty)
+    else if low + 1 = high then
+      let (x, y) := arr[low]'(ltSize.1)
+      q(.leaf $x $y)
     else
-      throw "invalid finite number"
+      let middle := (low + high).div2
+      let left :=  mapTreeOfSubarray arr low middle
+      let right := mapTreeOfSubarray arr (middle + 1) high
+      have middle_valid : (low + high).div2 < arr.size := (by
+        rw [Nat.div2_val]
+        have h : (low + high < arr.size + arr.size) → ((low + high) / 2 < arr.size) := (by
+          intro ab_lt_nn
+          rw [←Nat.two_mul] at ab_lt_nn
+          apply Nat.div_lt_of_lt_mul ab_lt_nn)
+        apply h
+        apply Nat.lt_of_le_of_lt (Nat.add_le_add_left ltSize.2 low) (Nat.add_lt_add_right ltSize.1 arr.size))
+      let (x, y) := arr[middle]'middle_valid
+      q(.node $x $y $left $right)
+  else
+    q(.empty)
 
+/--
+  Given an array of key-value pairs, generate the corresponding balanced search tree.
+  NB: The array must be sorted by keys.
+-/
+def mapTreeOfArray {α β : Q(Type)} (arr : Array (Q($α) × Q($β))) : Q(MapTree $α $β) :=
+  mapTreeOfSubarray arr 0 arr.size
 
-structure DisconnectivityData (G : Graph) : Type where
+/-- Construct a quoted edge from a pair of numbers -/
+def edgeOfData (n : Q(Nat)) : Nat × Nat → Q(Edge $n) :=
+  fun (a, b) =>
+  have H1 : Q(Nat.blt $a $b = true) := (q(Eq.refl true) : Lean.Expr)
+  have H2 : Q(Nat.blt $b $n = true) := (q(Eq.refl true) : Lean.Expr)
+  q(Edge.mk' $n $a $b $H1 $H2)
 
-  /-- A coloring of vertices by two colors -/
-  color : Map G.vertex (Fin 2)
+/-- Construct a quoted element of Fin -/
+def finOfData (n : Q(Nat)) (k : Nat) : Q(Fin $n) :=
+  have k : Q(Nat) := Lean.mkRawNatLit k
+  have H : Q(Nat.blt $k $n = true) := (q(Eq.refl true) : Lean.Expr)
+  q(Fin.mk $k (Nat.le_of_ble_eq_true $H))
 
-  /-- A vertex of color 0 -/
-  vertex0 : G.vertex
+/-- Construct a quoted graph from graph data -/
+def graphOfData (D : GraphData) : Q(Graph) :=
+  have vertexSize : Q(Nat) := Lean.mkRawNatLit D.vertexSize
+  have edges : Q(SetTree (Edge $vertexSize)) := setTreeOfArray (D.edges.map (edgeOfData vertexSize))
+  have edgeCorrect : Q(SetTree.isCorrect $(edges) = true) := (q(Eq.refl true) : Lean.Expr)
+  q(Graph.mk $vertexSize $edges $edgeCorrect)
 
-  /-- A vertex of color 1-/
-  vertex1 : G.vertex
+/-- Construct a connectivity certificate from connectivity data -/
+def connectivityCertificateOfData (G : Q(Graph)) (C : ConnectivityData) : Q(ConnectivityCertificate $G) :=
+  have n : Q(Nat) := q(Graph.vertexSize $G)
+  have root : Q(Graph.vertex $G) := finOfData n C.root
+  have nextMap : Q(MapTree (Graph.vertex $G) (Graph.vertex $G)) :=
+    mapTreeOfArray (C.next.map (fun (i,j) => (finOfData n i, finOfData n j)))
+  have next : Q(Graph.vertex $G → Graph.vertex $G) := q(fun v => MapTree.getD $nextMap v v)
+  have distToRootMap : Q(MapTree (Graph.vertex $G) Nat) :=
+    mapTreeOfArray (C.distToRoot.map (fun (i,j) => (finOfData n i, Lean.mkRawNatLit j)))
+  have distToRoot : Q(Graph.vertex $G → Nat) := q(fun v => MapTree.getD $distToRootMap 0 v)
+  have distRootZero : Q($distToRoot $root = 0) := (q(Eq.refl true) : Lean.Expr)
+  have distZeroRoot : Q(∀ (v : Graph.vertex $G), $distToRoot v = 0 → v = $root) := (q(Eq.refl true) : Lean.Expr)
+  have nextRoot : Q($next $root = $root) := (q(Eq.refl true) : Lean.Expr)
+  have nextAdjacent : Q(∀ (v : Graph.vertex $G), 0 < $distToRoot v → Graph.adjacent v ($next v)) := (q(Eq.refl true) : Lean.Expr)
+  have distNext : Q(∀ (v : Graph.vertex $G), 0 < $distToRoot v → $distToRoot ($next v) < $distToRoot v) := (q(Eq.refl true) : Lean.Expr)
+  q(ConnectivityCertificate.mk
+    $root
+    $next
+    $distToRoot
+    $distRootZero
+    $distZeroRoot
+    $nextRoot
+    $nextAdjacent
+    $distNext)
 
-deriving Lean.FromJson
-
-
-class DisconnectivityCertificate (G : Graph) extends DisconnectivityData G where
-
-  /-- Neighbors have the same color -/
-  edge_color : ∀ (e : G.edge), color e.val.fst = color e.val.snd
-
-  /-- Chosen vertices have the correct color -/
-  vertex0_color : color vertex0 = 0
-  vertex1_color : color vertex1 = 1
-
-instance DisconnectivityCertificate.fromJson (G : Graph) : Lean.FromJson (DisconnectivityCertificate G) where
-  fromJson? := fun json => do
-    let data ← Lean.FromJson.fromJson? json (α := DisconnectivityData G)
-    if h₁ : ∀ (e : G.edge), data.color e.val.fst = data.color e.val.snd then
-      if h₂ : data.color data.vertex0 = 0 then
-        if h₃ : data.color data.vertex1 = 1 then
-          pure (DisconnectivityCertificate.mk data h₁ h₂ h₃)
-        else
-          throw "vertex1 does not have color 1"
-      else
-        throw "vertex0 does not have color 0"
-    else
-      throw "bi-colored edge encountered"
-
-structure GraphCertificate : Type where
-  graph : Graph
-  connectivityCertificate? : Option (ConnectivityCertificate graph)
-  disconnectivityCertificate? : Option (DisconnectivityCertificate graph)
-deriving Lean.FromJson, Inhabited
-
-def loadGraphCertificate (fileName : System.FilePath) : IO GraphCertificate := do
-  let file ← IO.FS.readFile fileName
-  match (Lean.Json.parse file >>= Lean.fromJson?) with
-  | .ok info => pure info
-  | .error msg => throw (.userError msg)
+/-- Construct a disconnectivity certificate from connectivity data -/
+def disconnectivityCertificateOfData (G : Q(Graph)) (D : DisconnectivityData) : Q(DisconnectivityCertificate $G) :=
+  have n : Q(Nat) := q(Graph.vertexSize $G)
+  have colorMap : Q(MapTree (Graph.vertex $G) (Fin 2)) :=
+    mapTreeOfArray (D.color.map (fun (i,j) => (finOfData n i, finOfData (Lean.mkRawNatLit 2) j)))
+  have color : Q(Graph.vertex $G → Fin 2) := q(fun v => MapTree.getD $colorMap 0 v)
+  have vertex0 : Q(Graph.vertex $G) := finOfData n D.vertex0
+  have vertex1 : Q(Graph.vertex $G) := finOfData n D.vertex1
+  have edgeColor : Q(∀ (e : Graph.edge $G), $color e.val.fst = $color e.val.snd) := (q(Eq.refl true) : Lean.Expr)
+  have vertex0Color : Q($color $vertex0 = 0) := (q(Eq.refl true) : Lean.Expr)
+  have vertex1Color : Q($color $vertex1 = 1) := (q(Eq.refl true) : Lean.Expr)
+  q(DisconnectivityCertificate.mk
+    $color
+    $vertex0
+    $vertex1
+    $edgeColor
+    $vertex0Color
+    $vertex1Color
+  )
 
 end GAP2Lean

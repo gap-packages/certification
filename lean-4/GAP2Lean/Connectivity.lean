@@ -1,5 +1,4 @@
 import GAP2Lean.Graph
-import GAP2Lean.Certificate
 
 namespace GAP2Lean
 
@@ -52,6 +51,36 @@ theorem heightInduction {α : Type} (f : α → Nat) (P : α → Prop) :
   }
   exact @WellFounded.fix _ Q Nat.lt (Nat.lt_wfRel.wf) Qstep (f a) a rfl
 
+/-- A certificate witnessing that a graph is connected -/
+class ConnectivityCertificate (G : Graph) where
+  /-- A vertex that every other vertex is connected to -/
+  root : G.vertex
+
+  /-- A map taking each vertex closer to the root -/
+  next : G.vertex → G.vertex
+
+  /--
+    Map each vertex to the distance to its root.
+    (It does not actually have to be the distance, it suffices
+    that it satisfy the conditions given below.) -/
+  distToRoot : G.vertex → Nat
+
+  /-- A root is at distance 0 from itself -/
+  distRootZero : distToRoot root = 0
+
+  /-- A vertex is a root if its distance to root is 0 -/
+  distZeroRoot : ∀ (v : G.vertex), distToRoot v = 0 → v = root
+
+  /--- A root is a fixed point of next -/
+  nextRoot : next root = root
+
+  /-- Each vertex that is not a root is adjacent to the next one -/
+  nextAdjacent : ∀ v, 0 < distToRoot v → G.adjacent v (next v)
+
+  /-- distance to root decreases as we travel along the path given by next -/
+  distNext : ∀ v, 0 < distToRoot v → distToRoot (next v) < distToRoot v
+
+
 /-- Given a connected certificate, each vertex is connected to the root -/
 lemma connectedToRoot (G : Graph) [C : ConnectivityCertificate G] :
   ∀ v, G.connected v C.root := by
@@ -79,6 +108,27 @@ theorem Graph.is_connected (G : Graph) [C : ConnectivityCertificate G] : ∀ u v
   · apply G.connected_symm
     apply connectedToRoot
 
+/-- A certificate witnessing that a graph is disconnected. -/
+class DisconnectivityCertificate (G : Graph) where
+
+  /-- A coloring of vertices by two colors -/
+  color : G.vertex → Fin 2
+
+  /-- A vertex of color 0 -/
+  vertex0 : G.vertex
+
+  /-- A vertex of color 1-/
+  vertex1 : G.vertex
+
+  /-- Neighbors have the same color -/
+  edgeColor : ∀ (e : G.edge), color e.val.fst = color e.val.snd
+
+  /-- Vertex 0 has color 0 -/
+  vertex0Color : color vertex0 = 0
+
+  /-- Vertex 1 has color 1 -/
+  vertex1Color : color vertex1 = 1
+
 /-- Connected vertices have the same color -/
 lemma connected_color {G : Graph} [D : DisconnectivityCertificate G] (u v : G.vertex) :
     G.connected u v → D.color u = D.color v  := by
@@ -89,18 +139,19 @@ lemma connected_color {G : Graph} [D : DisconnectivityCertificate G] (u v : G.ve
      · intros u v eq
        symm
        assumption
-     · exact D.edge_color
+     · exact D.edgeColor
      · assumption
   case refl a => rfl
   case symm a b _ eq => apply Eq.symm eq
   case trans a b c _ _ eq1 eq2 => apply Eq.trans eq1 eq2
 
+/-- Given a certificate of disconnectivity, the graph is disconnected -/
 theorem Graph.is_disconnected (G : Graph) [D : DisconnectivityCertificate G] : ∃ u v, ¬ G.connected u v := by
   exists D.vertex0, D.vertex1
   intro C01
   apply @absurd (D.color D.vertex0 = D.color D.vertex1)
   · apply connected_color
     assumption
-  · simp [D.vertex0_color, D.vertex1_color]
+  · simp [D.vertex0Color, D.vertex1Color]
 
 end GAP2Lean

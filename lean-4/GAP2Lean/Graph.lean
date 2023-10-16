@@ -4,56 +4,34 @@ import GAP2Lean.Edge
 
 namespace GAP2Lean
 
-structure GraphData : Type where
+structure Graph where
   vertexSize : Nat
   edgeTree : SetTree (Edge vertexSize)
-deriving Lean.FromJson, Inhabited
+  edgeCorrect : edgeTree.isCorrect
 
-structure Graph extends GraphData where
-  edgeCorrect : edgeTree.isCorrect := by rfl
-
-instance: Inhabited Graph where
-  default := Graph.mk default
-
-instance Graph.fromJson : Lean.FromJson Graph where
-  fromJson? := fun json => do
-    let graphData ← Lean.FromJson.fromJson? json (α := GraphData)
-    if h : graphData.edgeTree.isCorrect then
-      pure (Graph.mk graphData h)
-    else
-      throw "invalid edges in a graph"
-
--- the type of graph vertices
-@[simp, reducible]
+/-- The type of graph vertices -/
+@[reducible]
 def Graph.vertex (G : Graph) := Fin G.vertexSize
 
-instance (G : Graph) : Lean.FromJson G.vertex where
-  fromJson? := fun json => do
-    let v ← json.getNat?
-    Nat.ltByCases (a := v) (b := G.vertexSize)
-      (fun v_lt_n => pure (Fin.mk v v_lt_n))
-      (fun _ => throw "invalid json vertex")
-      (fun _ => throw "invalid json vertex")
-
--- the underlying type of edges (pairs (i,j) such that j < i < G.vertexSize)
-@[simp, reducible]
+/-- The underlying type of edges, i.e., pairs (i,j) such that j < i < G.vertexSize. -/
+@[reducible]
 def Graph.edgeType (G : Graph) := Edge G.vertexSize
 
--- the type of edges
-@[simp, reducible]
+/-- The type of edges -/
+@[reducible]
 def Graph.edge (G : Graph) := { e : G.edgeType // G.edgeTree.mem e }
 
-@[simp]
+@[reducible]
 def Graph.fst {G : Graph} (e : G.edgeType) : G.vertex := e.fst
 
-@[simp]
+@[reducible]
 def Graph.snd {G : Graph} (e : G.edgeType) : G.vertex :=
   ⟨e.snd, e.snd.prop⟩
 
--- the number of eges in a graph
+/-- the number of eges in a graph -/
 def Graph.edgeSize (G : Graph) := Fintype.card G.edge
 
--- the vertex adjacency relation
+/-- The vertex adjacency relation as a boolean map -/
 def Graph.badjacent {G : Graph} : G.vertex → G.vertex → Bool :=
   fun u v =>
     ltByCases u v
@@ -61,6 +39,7 @@ def Graph.badjacent {G : Graph} : G.vertex → G.vertex → Bool :=
       (fun _ => false)
       (fun v_lt_u => G.edgeTree.mem (Edge.mk v u v_lt_u))
 
+/-- The vertex adjacency relations -/
 def Graph.adjacent {G : Graph} : G.vertex → G.vertex → Prop :=
   fun u v => G.badjacent u v
 
@@ -69,7 +48,7 @@ instance (G : Graph) : DecidableRel G.adjacent := by
   unfold Graph.adjacent
   infer_instance
 
--- adjacent vertices induce an edge
+/-- Adjacent vertices are connected by an edge -/
 def Graph.adjacentEdge {G : Graph} {u v : G.vertex} :
   G.adjacent u v → G.edge := by
   apply ltByCases u v
@@ -85,17 +64,21 @@ def Graph.adjacentEdge {G : Graph} {u v : G.vertex} :
     case val => exact Edge.mk v u v_lt_u
     case property => simp_all [v_lt_u, not_lt_of_lt, ltByCases, adjacent, badjacent]
 
+/-- Adjacency is irreflexive. -/
 lemma Graph.irreflexiveAdjacent (G : Graph) :
   ∀ (v : G.vertex), ¬ adjacent v v := by simp [ltByCases, adjacent, badjacent]
 
-lemma Graph.symmetricNeighbor (G : Graph) :
+/-- Adjacency is symmetric. -/
+lemma Graph.symmetricAdjacent (G : Graph) :
   ∀ (u v : G.vertex), adjacent u v → adjacent v u := by
     intros u v
     apply ltByCases u v <;> (intro h ; simp [ltByCases, not_lt_of_lt, h, adjacent, badjacent])
 
 /--
   For a symmetric relation on vertices, if it holds for all endpoints of all edges,
-  then it holds for all pairs of adjacent vertices.
+  then it holds for all pairs of adjacent vertices. This is useful for checking
+  statements about adjacent vertices, as we can just check all edges instead of
+  all pairs of vertices (and skipping the non-adjacent ones).
 -/
 def Graph.allEdges {G : Graph} (R : G.vertex → G.vertex → Prop) :
     (∀ u v, R u v → R v u) →
@@ -119,19 +102,19 @@ def Graph.allEdges {G : Graph} (R : G.vertex → G.vertex → Prop) :
     apply R_symm
     exact A
 
--- the neighborhood of a vertex, as a set
+/-- The neighborhood of a vertex. -/
 @[reducible]
 def Graph.neighborhood (G : Graph) (v : G.vertex) :=
   { u : G.vertex // G.badjacent v u }
 
--- the degree of a vertex
+/-- The degree of a vertex. -/
 def Graph.degree (G : Graph) (v : G.vertex) : Nat := Fintype.card (G.neighborhood v)
 
--- the minimal vertex degree, equals ⊤ for empty graph
+/-- The minimal vertex degree, equals ⊤ for empty graph. -/
 def Graph.minDegree (G : Graph) : WithTop Nat :=
   Finset.inf (Fin.fintype G.vertexSize).elems (fun v => G.degree v)
 
--- the maximal vertex degree, equals ⊥ for empty graph
+/-- The maximal vertex degree, equals ⊥ for empty graph. -/
 def Graph.maxDegree (G : Graph) : WithBot Nat :=
   Finset.sup (Fin.fintype G.vertexSize).elems (fun v => G.degree v)
 

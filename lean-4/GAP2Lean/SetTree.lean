@@ -1,64 +1,16 @@
-import Mathlib.Init.Order.Defs
-import Mathlib.Tactic.Basic
+import Mathlib
 
 import GAP2Lean.BoundedOrder
 import GAP2Lean.OrdEq
 
 namespace GAP2Lean
 
-/--
-  A finite set represented as a search tree.
---/
+/--  A finite set represented as a search tree. --/
 inductive SetTree.{u} (α : Type u) : Type u
   | empty : SetTree α
   | leaf : α → SetTree α
   | node : α → SetTree α → SetTree α → SetTree α
 deriving Repr, Inhabited
-
-/--
-  Given a subarray of key-value pairs, generate the corresponding balanced search tree.
-  NB: The subarray must be sorted by keys.
--/
-partial def SetTree.ofSubarray {α : Type} (arr : Array α) (low high : ℕ) : SetTree α :=
-  if ltSize : low < arr.size ∧ high <= arr.size then
-    if _ : low >= high then
-      .empty
-    else if low + 1 = high then
-      let x := arr[low]'(ltSize.1)
-      .leaf x
-    else
-      let middle := (low + high).div2
-      let left :=  ofSubarray arr low middle
-      let right := ofSubarray arr (middle + 1) high
-      have middle_valid : (low + high).div2 < arr.size := (by
-        rw [Nat.div2_val]
-        have h : (low + high < arr.size + arr.size) → ((low + high) / 2 < arr.size) := (by
-          intro ab_lt_nn
-          rw [←Nat.two_mul] at ab_lt_nn
-          apply Nat.div_lt_of_lt_mul ab_lt_nn)
-        apply h
-        apply Nat.lt_of_le_of_lt (Nat.add_le_add_left ltSize.2 low) (Nat.add_lt_add_right ltSize.1 arr.size))
-      let x := arr[middle]'middle_valid
-      .node x left right
-  else
-    .empty
-
-/--
-  Given an array of key-value pairs, generate the corresponding balanced search tree.
-  NB: The array must be sorted by keys.
--/
-def SetTree.ofArray {α : Type} (arr : Array α) : SetTree α :=
-  ofSubarray arr 0 arr.size
-
-/--
-  Convert a JSON array of key-value pairs to a SetTree.
--/
-instance SetTree.fromJson {α : Type} [Ord α] [jα : Lean.FromJson α] : Lean.FromJson (SetTree α) where
-  fromJson? := fun json => do
-    let arr ← json.getArr?
-    let arr ← arr.mapM jα.fromJson?
-    let arr := arr.qsort (fun u v => compare u v = .lt)
-    pure (ofArray arr)
 
 /--
   The given tree is a valid search tree with elements within given bounds.
@@ -130,6 +82,10 @@ def SetTree.all {α : Type} [Ord α] (t : SetTree α) (p : α → Prop) [Decidab
   | leaf x => p x
   | node x left right => p x && left.all p && right.all p
 
+/-- If a statement holds for all vertices in the tree, then it holds for all
+    elements of the set represented by the tree. Note taht since we do not assume
+    the tree to be correct, there may be some vertices that are not finable by
+    binary search, and these do not appear in the represented set. -/
 theorem SetTree.all_forall {α : Type} [Ord α] [OrdEq α] (t : SetTree α) (p : α → Prop) [DecidablePred p] :
   t.all p → ∀ x, SetTree.mem x t → p x := by
   induction t
@@ -153,6 +109,7 @@ theorem SetTree.all_forall {α : Type} [Ord α] [OrdEq α] (t : SetTree α) (p :
       | inl H => simp [H.left] ; rw [H.right] ; assumption
       | inr H => simp [H.left] ; apply ihr all_right
 
+/-- Does there exists an element in the tree that satisfies the given property? -/
 @[simp]
 def SetTree.exi {α : Type} [Ord α] (t : SetTree α) (p : α → Prop) [DecidablePred p] : Bool :=
   match t with
@@ -160,6 +117,10 @@ def SetTree.exi {α : Type} [Ord α] (t : SetTree α) (p : α → Prop) [Decidab
   | leaf x => p x
   | node x left right => p x || left.exi p || right.exi p
 
+/--
+  If the finite set represented by the tree has an element satisfying a given property,
+  then the tree contains an element satisfying the property. Note that the converse
+  need not hold because we are not assumnig that the tree is correct. -/
 theorem SetTree.exists_exi {α : Type} [Ord α] [OrdEq α] (p : α → Prop) [DecidablePred p] :
   ∀ (t : SetTree α), (∃ x, SetTree.mem x t ∧ p x) → t.exi p = true := by
   intro t
@@ -184,8 +145,8 @@ theorem SetTree.exists_exi {α : Type} [Ord α] [OrdEq α] (p : α → Prop) [De
       | inl H => simp [H.left] ; rw [H.right] ; intro ; apply Or.inl ; apply Or.inl ; assumption
       | inr H => simp [H.left] ; intros ; apply Or.inr ; apply ihr ; exists x
 
--- The underlying set of the tree
-@[reducible, simp]
+/-- The underlying set of the tree -/
+@[reducible]
 def SetTree.set {α : Type} [Ord α] (t : SetTree α) := { x : α // t.mem x }
 
 -- def SetTree.size_is_card {α : Type} [Ord α] [Fintype α] (t : SetTree α) :

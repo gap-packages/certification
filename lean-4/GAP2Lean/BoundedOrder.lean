@@ -1,14 +1,8 @@
-import Mathlib.Init.Order.Defs
-import Mathlib.Tactic.LibrarySearch
-import Mathlib.Tactic.Tauto
-import Mathlib.Mathport.Syntax
-import Mathlib.Tactic.Basic
-import Mathlib.Logic.Basic
-import Mathlib.Order.Monotone.Basic
-import Init.Core
-import Init.Prelude
+import Mathlib
 
--- An order extended with a bottom and a top element at the same time
+-- An order extended with a bottom and a top element at the same time.
+-- This is like simultaneous WithBot and MathLib.Order.
+
 namespace GAP2Lean
 
 inductive Bounded (α : Type) : Type
@@ -128,10 +122,6 @@ instance Bounded_PartialOrder (α : Type) [PartialOrder α]: PartialOrder (Bound
   le_antisymm := by
     intros a b h h'
     cases a <;> repeat (first | cases b | rfl | contradiction | simp; apply le_antisymm <;> assumption)
-
--- lemma Decidable.compareBoundedElements (a b : α) [LinearOrder α] : Decidable (element a ≤ element b) := by
---   apply decidable_of_iff (a ≤ b)
---   apply Iff.intro <;> (intro h; assumption)
 
 @[simp]
 instance Bounded_LinearOrder (α : Type) [la : LinearOrder α] [de : DecidableEq α] : LinearOrder (Bounded α) where
