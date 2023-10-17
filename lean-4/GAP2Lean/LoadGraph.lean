@@ -68,14 +68,4 @@ elab "load_graph" graphName:ident fileName:str : command => do
     }
     Lean.Elab.Command.liftTermElabM <| Lean.Meta.addInstance disconnectivityCertificateName .scoped 42
 
-
-load_graph cow "cert.json"
-
-#check cow
-#check cow.is_connected
-
--- load_graph bull "cube.json"
-
--- #check connected bull
-
 end GAP2Lean

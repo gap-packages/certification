@@ -133,8 +133,8 @@ def disconnectivityCertificateOfData (G : Q(Graph)) (D : DisconnectivityData) : 
   have vertex0 : Q(Graph.vertex $G) := finOfData n D.vertex0
   have vertex1 : Q(Graph.vertex $G) := finOfData n D.vertex1
   have edgeColor : Q(SetTree.all (Graph.edgeTree $G) (fun e => $color e.fst = $color e.snd) = true) := (q(Eq.refl true) : Lean.Expr)
-  have vertex0Color : Q($color $vertex0 = 0) := (q(Eq.refl true) : Lean.Expr)
-  have vertex1Color : Q($color $vertex1 = 1) := (q(Eq.refl true) : Lean.Expr)
+  have vertex0Color : Q($color $vertex0 = 0) := (q(Eq.refl (0 : Fin 2)) : Lean.Expr)
+  have vertex1Color : Q($color $vertex1 = 1) := (q(Eq.refl (1 : Fin 2)) : Lean.Expr)
   q(DisconnectivityCertificate.mk
     $color
     $vertex0

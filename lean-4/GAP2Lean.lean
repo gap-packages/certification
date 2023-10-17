@@ -1,3 +1,1 @@
-import GAP2Lean.Graph
-import GAP2Lean.Certificate
--- import GAP2Lean.JsonDecoder
+import GAP2Lean.LoadGraph
