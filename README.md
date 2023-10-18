@@ -4,10 +4,8 @@
 
 # certification
 
-Authors: [Andrej Bauer](https://www.andrej.com/) and [Olexandr Konovalov](https://olexandr-konovalov.github.io).
-
 This GAP package shows how one can transfer mathematical objects from GAP to the Lean 4 proof assistant, so that
-the proof assistant formally verifies the mathematical objects, as well as its properties. At present this is is
+the proof assistant formally verifies the mathematical objects and its properties. At present it is
 just a proof of concept supporting transfer of simple graphs, together with certificates for their connectedness
 or disconnectedness. The technique can be extended to many other kinds of mathematical objects, as well as to
 other computer algebra systems and proof assistants.
@@ -23,7 +21,9 @@ To transfer from GAP to Lean 4 a graph `G` and the fact that `G` is connected, w
 3. Import JSON into Lean 4 to obtain (unverified) data.
 4. Reconstruct from the data the (formally verified) graph `G` and a theorem stating that `G` is connected.
 
-The present GAP package performs the first two steps, and the attached Lean 4 code the last two steps.
+The same recipe works for disconnectedness. As a general rule of thumb, computational tasks should be delegated to
+the computer algebra system, and formal verification of certificates to the proof assistant.
+The GAP package performs the first two steps, and the attached Lean 4 code the last two steps. 
 
 ## The JSON format
 
@@ -96,3 +96,9 @@ Specifically, suppose we did not require that maps be given as lists sorted by t
 to build an efficient map from the list (say, a balanced search tree) it would have to be able to compare *unverified* keys
 (to sort the array, or to build the search tree) in the order of *verified* keys. This sort of mixing of meta-level and
 kernel-level is as annoying as a pea.
+
+## Acknowledgement
+
+The present work was initiated at Dagstuhl Seminar 23401 [Automated mathematics: integrating proofs, algorithms and data](https://www.dagstuhl.de/23401)
+by [Andrej Bauer](https://www.andrej.com/) and [Olexandr Konovalov](https://olexandr-konovalov.github.io). We thank
+[Schloss Dagstuhl - Leibniz Center of Informatics](https://www.dagstuhl.de/) for the support.
