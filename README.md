@@ -79,7 +79,7 @@ The `⟨connectivity-data⟩` describes a spanning tree and has the following fo
 The spanning tree so represented is rooted at `root`, the map `next` takes each vertex one step closer to the `root`
 (and maps `root` to itself), and `distToRoot` decreases as we move along using `next` (which guarantees that `next`
 does not generate any cycles). Please consult the formal specification `ConnectivityCertificate` in
-[`JSON2Lean/Connectivity.lean`](./JSON2Lean/Connectivity.lean).
+[`Lean4/JSON2Lean/Connectivity.lean`](./Lean4/JSON2Lean/Connectivity.lean).
 
 ### Disconnectivity 
 
