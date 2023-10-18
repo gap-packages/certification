@@ -36,8 +36,8 @@ proof assistant.
 ## The JSON format
 
 We use JSON as the format for data exchange, as it can easily be produced in GAP and parsed in Lean 4.
-You may wish to look at examples in `[Lean4/examples](./Lean4/examples)` folder and the formalization
-in `[Lean4/JSON2Lean/JsonData.lean](./Lean4/JSON2Lean/JsonData.lean)` to clarify the description of
+You may wish to look at examples in [`Lean4/examples`](./Lean4/examples) folder and the formalization
+in [`Lean4/JSON2Lean/JsonData.lean`](./Lean4/JSON2Lean/JsonData.lean) to clarify the description of
 the format given here.
 
 We refer to the contents of a JSON file as “data”, rather than “certificate”, to distinguish such “raw” data
@@ -79,7 +79,7 @@ The `⟨connectivity-data⟩` describes a spanning tree and has the following fo
 The spanning tree so represented is rooted at `root`, the map `next` takes each vertex one step closer to the `root`
 (and maps `root` to itself), and `distToRoot` decreases as we move along using `next` (which guarantees that `next`
 does not generate any cycles). Please consult the formal specification `ConnectivityCertificate` in
-`[JSON2Lean/Connectivity.lean](./JSON2Lean/Connectivity.lean)`.
+[`JSON2Lean/Connectivity.lean`](./JSON2Lean/Connectivity.lean).
 
 ### Disconnectivity 
 
