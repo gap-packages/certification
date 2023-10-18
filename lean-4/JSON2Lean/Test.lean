@@ -1,9 +1,9 @@
 import Lean
 import Qq
-import GAP2Lean.Certificate
-import GAP2Lean.Examples
+import JSON2Lean.Certificate
+import JSON2Lean.Examples
 
-namespace GAP2Lean
+namespace JSON2Lean
 
 -- initialize cow : GraphCertificate ← loadGraphCertificate "cert.json"
 -- #eval cow
@@ -28,4 +28,4 @@ def bessieJ : Lean.Json :=
   | .ok j => j
   | .error _ => .null
 
-end GAP2Lean
+end JSON2Lean

@@ -1,11 +1,11 @@
 import Qq
-import GAP2Lean.JsonData
-import GAP2Lean.SetTree
-import GAP2Lean.Edge
-import GAP2Lean.Graph
-import GAP2Lean.Connectivity
+import JSON2Lean.JsonData
+import JSON2Lean.SetTree
+import JSON2Lean.Edge
+import JSON2Lean.Graph
+import JSON2Lean.Connectivity
 
-namespace GAP2Lean
+namespace JSON2Lean
 
 open Qq
 
@@ -144,4 +144,4 @@ def disconnectivityCertificateOfData (G : Q(Graph)) (D : DisconnectivityData) : 
     $vertex1Color
   )
 
-end GAP2Lean
+end JSON2Lean

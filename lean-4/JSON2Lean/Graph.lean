@@ -1,8 +1,8 @@
-import GAP2Lean.SetTree
-import GAP2Lean.MapTree
-import GAP2Lean.Edge
+import JSON2Lean.SetTree
+import JSON2Lean.MapTree
+import JSON2Lean.Edge
 
-namespace GAP2Lean
+namespace JSON2Lean
 
 structure Graph where
   vertexSize : Nat
@@ -125,4 +125,4 @@ def Graph.minDegree (G : Graph) : WithTop Nat :=
 def Graph.maxDegree (G : Graph) : WithBot Nat :=
   Finset.sup (Fin.fintype G.vertexSize).elems (fun v => G.degree v)
 
-end GAP2Lean
+end JSON2Lean

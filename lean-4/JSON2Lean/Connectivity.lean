@@ -1,6 +1,6 @@
-import GAP2Lean.Graph
+import JSON2Lean.Graph
 
-namespace GAP2Lean
+namespace JSON2Lean
 
 /- Basic facts about connected and disconnected graphs. -/
 
@@ -154,4 +154,4 @@ theorem Graph.is_disconnected (G : Graph) [D : DisconnectivityCertificate G] : â
     assumption
   Â· simp [D.vertex0Color, D.vertex1Color]
 
-end GAP2Lean
+end JSON2Lean

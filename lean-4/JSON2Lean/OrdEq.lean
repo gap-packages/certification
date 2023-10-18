@@ -1,6 +1,6 @@
 import Mathlib
 
-namespace GAP2Lean
+namespace JSON2Lean
 
 /---
   For the purposes of binary search trees we don't need a linear order.
@@ -21,4 +21,4 @@ lemma OrdEq_cases {α : Type} [Ord α] [OrdEq α] (x y : α):
   revert e
   cases (compare x y) <;> simp
 
-end GAP2Lean
+end JSON2Lean

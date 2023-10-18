@@ -1,8 +1,8 @@
 import Mathlib
 
-import GAP2Lean.BoundedOrder
+import JSON2Lean.BoundedOrder
 
-namespace GAP2Lean
+namespace JSON2Lean
 
 /--  A finite set represented as a search tree. --/
 inductive SetTree.{u} (α : Type u) : Type u
@@ -148,4 +148,4 @@ theorem SetTree.exists_exi {α : Type} [LinearOrder α] (p : α → Prop) [Decid
 @[reducible]
 def SetTree.set {α : Type} [Ord α] (t : SetTree α) := { x : α // t.mem x }
 
-end GAP2Lean
+end JSON2Lean

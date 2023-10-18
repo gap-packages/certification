@@ -1,7 +1,7 @@
 import Lean
 import Mathlib
 
-namespace GAP2Lean
+namespace JSON2Lean
 
 structure Edge (m : Nat) where
   fst : Fin m
@@ -26,4 +26,4 @@ def fst_snd_injective {m : Nat} : Function.Injective (fst_snd m) := by
 instance Edge.linearOrder {m : Nat} : LinearOrder (Edge m) :=
   LinearOrder.lift' (fst_snd m) fst_snd_injective
 
-end GAP2Lean
+end JSON2Lean

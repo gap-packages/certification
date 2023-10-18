@@ -1,12 +1,12 @@
 import Qq
-import GAP2Lean.SetTree
-import GAP2Lean.MapTree
-import GAP2Lean.Graph
-import GAP2Lean.Connectivity
-import GAP2Lean.Certificate
-import GAP2Lean.JsonData
+import JSON2Lean.SetTree
+import JSON2Lean.MapTree
+import JSON2Lean.Graph
+import JSON2Lean.Connectivity
+import JSON2Lean.Certificate
+import JSON2Lean.JsonData
 
-namespace GAP2Lean
+namespace JSON2Lean
 
 open Qq
 
@@ -68,4 +68,4 @@ elab "load_graph" graphName:ident fileName:str : command => do
     }
     Lean.Elab.Command.liftTermElabM <| Lean.Meta.addInstance disconnectivityCertificateName .scoped 42
 
-end GAP2Lean
+end JSON2Lean

@@ -1,6 +1,6 @@
-import GAP2Lean.LoadGraph
+import JSON2Lean.LoadGraph
 
-namespace GAP2Lean
+namespace JSON2Lean
 
 -- Load the cycle on 7 vertices from JSON file
 load_graph Cycle7 "examples/cycle7.json"
@@ -22,4 +22,4 @@ load_graph Two "examples/two.json"
 load_graph Cow "examples/cycle3-cycle4.json"
 #check Cow.is_disconnected
 
-end GAP2Lean
+end JSON2Lean
