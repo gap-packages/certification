@@ -3,94 +3,96 @@
 [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/gap-packages/certification/HEAD)
 
 # certification
-Certificates for theorem provers
 
-## JSON exchange format
+Authors: [Andrej Bauer](https://www.andrej.com/) and [Olexandr Konovalov](https://olexandr-konovalov.github.io).
 
-This section describes the JSON format for exporting & importing graphs.
+This GAP package shows how one can transfer mathematical objects from GAP to the Lean 4 proof assistant, so that
+the proof assistant formally verifies the mathematical objects, as well as its properties. At present this is is
+just a proof of concept supporting transfer of simple graphs, together with certificates for their connectedness
+or disconnectedness. The technique can be extended to many other kinds of mathematical objects, as well as to
+other computer algebra systems and proof assistants.
 
-### Maps
+The GAP source is organized a standard package. Please consult `[Lean4/README.md](Lean4/README.md)` on how to use
+the Lean 4 part of the repository.
 
-A naive way to represent a map `{x_1 ↦ y_1, ..., x_n ↦ y_n}` is to use a an associative list `[(x_1, y_1), ..., (x_n,
-y_n)]`. This is inefficient but simple. We may later switch to something better, such as balanced search trees.
+To transfer from GAP to Lean 4 a graph `G` and the fact that `G` is connected, we proceed as follows:
 
-### Simple undirected graph
+1. Generate in GAP the graph `G`, as well as a certificate `C` show that `G` is connected.
+   (`C` is essentially a spanning tree, see below.)
+2. Export `G` and `C` to JSON.
+3. Import JSON into Lean 4 to obtain (unverified) data.
+4. Reconstruct from the data the (formally verified) graph `G` and a theorem stating that `G` is connected.
 
-The format is as follows:
-```
-{
-    "graph": {
-        "vertexSize": ⟨number-of-vertices⟩,
-        "edges" : ⟨edges-list⟩
-    },
-    "certificate1" : ⋯,
-    "certificate2" : ⋯,
-    ⋯
+The present GAP package performs the first two steps, and the attached Lean 4 code the last two steps.
+
+## The JSON format
+
+We use JSON as the format for data exchange, as it can easily be produced in GAP and parsed in Lean 4.
+You may wish to look at examples in `[Lean4/examples](./Lean4/examples)` folder and the formalization
+in `[Lean4/JSON2Lean/JsonData.lean](./Lean4/JSON2Lean/JsonData.lean)` to clarify the description of
+the format given here.
+
+We refer to the contents of a JSON file as “data”, rather than “certificate”, to distinguish such “raw” data
+from the formally verified mathematical objects and cerificates.
+
+A JSON file contains data in the following form:
+```json
+{ "graph" : ⟨graph-data⟩,
+  "connectivityData" : ⟨connectivity-data⟩,
+  "disconnectivityData" : ⟨disconnectivity-data⟩
 }
 ```
-The vertices are numbers from `0` to `⟨number-of-vertices⟩` (excluded). An adjancency list is a list of lists of
-integers. The `n`-th list is the list of vertices of vertex `x_n`.
+The fields `"connectivity-data"` and `"disconnectivity-data` are both optional. 
 
-### Connectivity certificate
+### Graph description
 
-A connectivity certificate is as follows:
-```
-"connectivityCertificate": {
-    "root": ⟨root⟩,
-    "next": ⟨next-map⟩,
-    "distToRoot": ⟨dist-map⟩
+The format of `⟨graph-representation⟩` is
+```json
+{ "vertexSize" : ⟨number⟩,
+  "edges" : ⟨list-of-edges⟩
 }
 ```
-The above information encodes a rooted spanning tree. One of the vertices is designated as the root.
-The `next` field is a map from vertices to vertices, which takes each vertex to the next vertex on the
-(unique) path to the root. The root must map to itself. The `distToRoot` maps each vertex to the distance
-to the root.
+where `⟨number⟩` is the number of vertices. The vertices are indexed from `0` to `⟨number⟩ - 1`.
+An edge from vertex `i` to vertex `j`, where `i < j` is represented as the two-element array `[i,j]`.
+Finally, `⟨list-of-edges⟩` is the list of all edges, ordered lexicographically.
 
-#### Example: The cycle on 7 vertices
+The connectivity and disconnectivity data requires representation of finite maps.
+The map `x₁ ↦ y₁, …, xᵢ ↦ yᵢ` is represented as an associative array `[[x₁,y₁], …, [xᵢ,yᵢ]]`, where `x₁, …, xᵢ` must be ordered.
 
-```
-{
-    "graph": {
-        "vertexSize": 7,
-        "edges" : [ [0, 1], [0, 6], [ 1, 2 ], [ 1, 7 ], [ 2, 3 ], [ 3, 4 ], [ 4, 5 ], [ 5, 6 ] ]
-    },
-    "connectivityCertificate": {
-        "root": 6,
-        "next": [ [0, 6], [1, 2], [2, 3], [3, 4], [4, 5], [5, 6], [6, 6] ],
-        "distToRoot": [ [1, 1], [1, 5], [2, 4], [3, 3], [4, 2], [5, 1], [6, 0] ]
-    }
+### Connectivity data
+
+The `⟨connectivity-data⟩` describes a spanning tree and has the following form:
+```json
+{ "root" : ⟨vertex⟩,
+  "next" : ⟨vertex-to-vertex-map⟩,
+  "distToRoot" : ⟨vertex-to-number-map⟩
 }
 ```
+The spanning tree so represented is rooted at `root`, the map `next` takes each vertex one step closer to the `root`
+(and maps `root` to itself), and `distToRoot` decreases as we move along using `next` (which guarantees that `next`
+does not generate any cycles). Please consult the formal specification `ConnectivityCertificate` in
+`[JSON2Lean/Connectivity.lean](./JSON2Lean/Connectivity.lean)`.
 
-### Disconnectivity certificate
+### Disconnectivity 
 
-A disconnectivity certificate is as follows:
-```
-"disconnectivityCertificate" : {
-    "color" : ⟨vertex-color-map⟩,
-    "vertex0" : ⟨vertex₀⟩,
-    "vertex1" : ⟨vertex₁⟩
+The `⟨disconnectivity-data⟩` describes a coloring of vertices by colors `0` and `1`, together with two vertices,
+one of each color:
+```json
+{ "color" : , ⟨vertex-to-0,1-map⟩
+  "vertex0" : ⟨vertex-of-color-0⟩,
+  "vertex1" : ⟨vertex-of-color-1⟩
 }
 ```
-It must satisfy the following conditions:
+Adjacent vertices must have the same color.
 
-* `⟨vertex-color-map⟩` maps every vertex to `0` or `1`,
-* `⟨vertex₀⟩` and `⟨vertex₁⟩` are vertices,
-* the color of `vertex₀` is `0` and the color of `vertex₁` is `1`,
-* for every edge from `u` to `v`, the endpoints `u` and `v` have the same color
+### Indulging the proof assistant
 
-#### Example: the graph `0--1, 2`
+Some of the requirements given above seem unecessary. For example, why insist that maps be given in the order of
+ascending keys, when it is easy to sort lists? And why must we explicitly provide `vertex0` and `vertex1` when they
+can be found easily by scanning the coloring? The proof assistant is like the princess from
+[The Princess and the Pea](https://en.wikipedia.org/wiki/The_Princess_and_the_Pea), it must be pampered.
 
-```
-{
-    "graph": {
-        "vertexSize": 3,
-        "edges" : [ [0, 1] ]
-    },
-    "connectivityCertificate": {
-        "color" : [0, 0], [1, 0], [2, 1]],
-        "vertex0" : 0,
-        "vertex1" : 2
-    }
-}
-```
+Specifically, suppose we did not require that maps be given as lists sorted by the keys. In order for the proof assistant
+to build an efficient map from the list (say, a balanced search tree) it would have to be able to compare *unverified* keys
+(to sort the array, or to build the search tree) in the order of *verified* keys. This sort of mixing of meta-level and
+kernel-level is as annoying as a pea.
