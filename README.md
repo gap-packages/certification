@@ -10,20 +10,28 @@ just a proof of concept supporting transfer of simple graphs, together with cert
 or disconnectedness. The technique can be extended to many other kinds of mathematical objects, as well as to
 other computer algebra systems and proof assistants.
 
-The GAP source is organized a standard package. Please consult `[Lean4/README.md](Lean4/README.md)` on how to use
-the Lean 4 part of the repository.
+The GAP source is organized as a standard GAP package, with an additional folder containing Lean 4 code, see
+`[Lean4/README.md](Lean4/README.md)` for instructions on Lean 4.
 
-To transfer from GAP to Lean 4 a graph `G` and the fact that `G` is connected, we proceed as follows:
+## The main idea
 
-1. Generate in GAP the graph `G`, as well as a certificate `C` show that `G` is connected.
-   (`C` is essentially a spanning tree, see below.)
+Suppose we construct in GAP a graph `G` that we would like to import into the [Lean](https://lean-lang.org) proof assistant.
+We may wish to do so because constructing `G` in GAP is much easier than in Lean 4, or because we would like to formally
+verify some facts about `G`, who knows. In addition, suppose `G` is connected, and we would like to help Lean 4 understand
+this fact by communicating from GAP to Lean 4 a *certificate* `C` witnessing the fact that `G` is connected (essentially a
+spanning tree, see below). We accomplish this by taking the following steps:
+
+1. Generate the graph `G` and the certificate `C` in GAP.
 2. Export `G` and `C` to JSON.
 3. Import JSON into Lean 4 to obtain (unverified) data.
 4. Reconstruct from the data the (formally verified) graph `G` and a theorem stating that `G` is connected.
 
-The same recipe works for disconnectedness. As a general rule of thumb, computational tasks should be delegated to
-the computer algebra system, and formal verification of certificates to the proof assistant.
-The GAP package performs the first two steps, and the attached Lean 4 code the last two steps. 
+The GAP package performs the first two steps, and the enclosed Lean 4 code the last two steps.
+
+The same recipe works for disconnectedness, and for many other kinds of objects and mathematical facts. (Some certificates
+can be computationally very expensive or very large, but that is a story for another day.) As a general rule of thumb,
+computational tasks should be delegated to the computer algebra system, and formal verification of certificates to the
+proof assistant.  
 
 ## The JSON format
 
