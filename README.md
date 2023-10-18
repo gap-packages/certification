@@ -11,7 +11,7 @@ or disconnectedness. The technique can be extended to many other kinds of mathem
 other computer algebra systems and proof assistants.
 
 The GAP source is organized as a standard GAP package, with an additional folder containing Lean 4 code, see
-`[Lean4/README.md](Lean4/README.md)` for instructions on Lean 4.
+[`Lean4/README.md`](Lean4/README.md) for instructions on Lean 4.
 
 ## The main idea
 
