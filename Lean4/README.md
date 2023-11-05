@@ -31,9 +31,9 @@ Alternatively, build the files from the command line:
 
 The code is organized as follows:
 
-* [`JSON2Lean.Graph`](./JSON2Lean/Graph.lean), [`JSON2Lean.Graph`](./JSON2Lean/Edge.lean), and [`JSON2Lean.Graph`](./JSON2Lean/Connetivity.lean): a bit of graph theory.
+* [`JSON2Lean.Graph`](./JSON2Lean/Graph.lean), [`JSON2Lean.Edge`](./JSON2Lean/Edge.lean), and [`JSON2Lean.Connectivity`](./JSON2Lean/Connectivity.lean): a bit of graph theory.
 * [`JSON2Lean.SetTree`](./JSON2Lean/SetTree.lean) and [`JSON2Lean.MapTree`](./JSON2Lean/MapTree.lean):
-  finite sets and maps implemented as binary search trees.
+  finite sets and finite maps implemented as binary search trees.
 * [`JSON2Lean.JsonData`](./JSON2Lean/JsonData.lean) parsing and loading of raw JSON data.
 * [`JSON2Lean.Certificate`](./JSON2Lean/Certificate.lean) generation of *quoted* Lean 4 objects from raw data.
 * [`JSON2Lean.LoadGraph`](./JSON2Lean/LoadGraph.lean) top-level `load_graph` command that ties all the parts together: load JSON from a file, convert it to raw data, generate quoted Lean objects and submit them to the kernel, install instancess that witness connectedness and disconnectedness.
