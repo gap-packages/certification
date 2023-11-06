@@ -68,14 +68,11 @@ class ConnectivityCertificate (G : Graph) where
   /-- A vertex is a root if its distance to root is 0 -/
   distZeroRoot : ∀ (v : G.vertex), distToRoot v = 0 → v = root
 
-  /--- A root is a fixed point of next -/
-  nextRoot : next root = root
-
   /-- Each vertex that is not a root is adjacent to the next one -/
-  nextAdjacent : ∀ v, 0 < distToRoot v → G.adjacent v (next v)
+  nextAdjacent : ∀ v, v ≠ root → G.adjacent v (next v)
 
   /-- distance to root decreases as we travel along the path given by next -/
-  distNext : ∀ v, 0 < distToRoot v → distToRoot (next v) < distToRoot v
+  distNext : ∀ v, v ≠ root → distToRoot (next v) < distToRoot v
 
 
 /-- Given a connected certificate, each vertex is connected to the root -/
@@ -83,15 +80,10 @@ lemma connectedToRoot (G : Graph) [C : ConnectivityCertificate G] :
   ∀ v, G.connected v C.root := by
   apply heightInduction C.distToRoot (fun v => G.connected v C.root)
   intros v ih
-  have zero_or_lt : C.distToRoot v = 0 ∨ 0 < C.distToRoot v := by
-    cases C.distToRoot v
-    · apply Or.inl ; simp
-    · apply Or.inr ; simp
-  cases zero_or_lt
-  · apply G.connected_of_eq
-    apply C.distZeroRoot v
-    assumption
-  · apply G.adjacentConnected v (C.next v) C.root
+  cases (Decidable.eq_or_ne v C.root)
+  case inl eq => apply G.connected_of_eq ; assumption
+  case inr neq =>
+    apply G.adjacentConnected v (C.next v) C.root
     · apply C.nextAdjacent ; assumption
     · apply ih
       apply C.distNext
