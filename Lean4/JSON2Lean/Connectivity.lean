@@ -65,9 +65,6 @@ class ConnectivityCertificate (G : Graph) where
     that it satisfy the conditions given below.) -/
   distToRoot : G.vertex → Nat
 
-  /-- A root is at distance 0 from itself -/
-  distRootZero : distToRoot root = 0
-
   /-- A vertex is a root if its distance to root is 0 -/
   distZeroRoot : ∀ (v : G.vertex), distToRoot v = 0 → v = root
 

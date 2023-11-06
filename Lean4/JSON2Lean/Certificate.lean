@@ -109,7 +109,6 @@ def connectivityCertificateOfData (G : Q(Graph)) (C : ConnectivityData) : Q(Conn
   have distToRootMap : Q(MapTree (Graph.vertex $G) Nat) :=
     mapTreeOfArray (C.distToRoot.map (fun (i,j) => (finOfData n i, Lean.mkRawNatLit j)))
   have distToRoot : Q(Graph.vertex $G → Nat) := q(fun v => MapTree.getD $distToRootMap 0 v)
-  have distRootZero : Q(decide ($distToRoot $root = 0) = true) := (q(Eq.refl true) : Lean.Expr)
   have distZeroRoot : Q(decide (∀ (v : Graph.vertex $G), $distToRoot v = 0 → v = $root) = true) := (q(Eq.refl true) : Lean.Expr)
   have nextRoot : Q(decide ($next $root = $root) = true) := (q(Eq.refl true) : Lean.Expr)
   have nextAdjacent : Q(decide (∀ (v : Graph.vertex $G), 0 < $distToRoot v → Graph.adjacent v ($next v)) = true) := (q(Eq.refl true) : Lean.Expr)
@@ -118,7 +117,6 @@ def connectivityCertificateOfData (G : Q(Graph)) (C : ConnectivityData) : Q(Conn
     $root
     $next
     $distToRoot
-    (of_decide_eq_true $distRootZero)
     (of_decide_eq_true $distZeroRoot)
     (of_decide_eq_true $nextRoot)
     (of_decide_eq_true $nextAdjacent)
